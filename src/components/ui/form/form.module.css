@@ -1,0 +1,255 @@
+/* 
+* form.module.css
+* This css module is used for form with all the children components
+*/
+
+.form {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  /* margin-bottom: 10vh; */
+}
+
+.formContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem 0.5rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.formHeader {
+  color: var(--bs-primary);
+  border-bottom: 1px solid var(--bs-primary);
+  padding: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+}
+
+.formFooter {
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.formRow {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.formInput {
+  flex: 1;
+}
+
+.errorMessage {
+  color: rgb(54, 10, 10);
+}
+.formDropdown {
+  width: 100%;
+  font-size: 14px !important;
+}
+
+.dropdownWrapper {
+  width: 100%;
+  font-size: 14px !important;
+}
+
+.form.Row {
+  .formInput {
+    flex-direction: row;
+    align-items: flex-start;
+    .lables {
+      width: 100%;
+      display: flex;
+      font-weight: 700;
+      align-items: flex-start;
+      outline: none;
+    }
+    .RowInputCssDiv {
+      width: 100%;
+      .RowInputCss {
+        outline: none;
+        box-shadow: none !important;
+      }
+      .RowInputCss:hover {
+        border: 1px solid var(--bs-table-striped-bg) !important;
+        box-shadow: none !important;
+      }
+      .errorLabel {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+      }
+    }
+    .RowInputCssDivWidget {
+      width: 100%;
+      .RowInputCssWidget {
+        border: none !important;
+        outline: none;
+        box-shadow: none !important;
+      }
+      .RowInputCssWidget:hover {
+        border: 1px solid var(--bs-table-striped-bg) !important;
+        box-shadow: none !important;
+      }
+      .errorLabel {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+      }
+    }
+  }
+  .dropdownWrapper {
+    flex-direction: row;
+    .lables {
+      width: 100%;
+      display: flex;
+      font-weight: 700;
+      align-items: center;
+      outline: none;
+    }
+  }
+
+  .formCheckbox {
+    flex-direction: row;
+    display: flex;
+    align-items: top;
+    .lables {
+      display: flex;
+      font-weight: 700;
+      align-items: flex-start;
+      padding: 9px;
+      outline: none;
+      width: 100% !important;
+    }
+    .RowDropdownDiv {
+      width: 100%;
+      text-align: center;
+      padding-left: 0.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      .checkbox {
+        outline: none;
+        border: none !important;
+        box-shadow: none !important;
+      }
+      .checkbox:hover {
+        background-color: #07080a21 !important;
+        box-shadow: none !important;
+      }
+      .errorLabel {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+      }
+    }
+  }
+}
+
+.inputWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.eyeButton {
+  position: absolute;
+  /* left: 16rem; */
+  top: 20%;
+  color: black;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+  right: 12px;
+}
+.eyeButton1 {
+  position: absolute;
+  left: 20rem;
+  top: 20%;
+  color: black;
+  cursor: pointer;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.disabledLabel {
+  opacity: 0.5;
+}
+
+.disabledIcon {
+  opacity: 0.5;
+  cursor: default;
+}
+.checkIcon {
+  color: rgb(20, 232, 20);
+  cursor: default;
+}
+
+.Input.full {
+  width: 100% !important;
+}
+
+.Input.half {
+  width: "-webkit-fill-available" !important;
+}
+
+.Input.oneThird {
+  padding: 0.68rem 1rem;
+}
+
+.button.medium {
+  padding: 1rem 1rem;
+}
+
+.button.large {
+  padding: 1.25rem 1rem;
+}
+@media screen and (max-width: 700px) {
+  .eyeButton {
+    margin-left: -6% !important;
+    margin-top: 1.5% !important;
+  }
+  .formHeader {
+    width: 100%;
+  }
+}
+
+.radioWrapper {
+  display: flex;
+  justify-content: center;
+  background: #f0f0f0;
+  font-size: 0.9rem;
+  padding: 0.8rem 0rem;
+}
+.radioOptions {
+  display: flex;
+  justify-content: center;
+  color: #979090;
+  padding: 5px;
+  gap: 6px;
+}
+
+.datepickerlabelW {
+  display: flex;
+  justify-content: center;
+  background: #f0f0f0;
+  font-size: 0.9rem;
+  padding: 0.8rem 0rem;
+}
+
+.datepickerbox {
+  border: none !important;
+  text-align: center;
+  color: #979090;
+}
