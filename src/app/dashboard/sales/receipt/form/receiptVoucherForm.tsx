@@ -17,7 +17,7 @@ export type DrawerProps = {
 
 type RefreshListFunction = () => void;
 
-const VoucherForm = (
+const ReceiptVoucherForm = (
   props: DrawerProps & {
     onRefreshList: RefreshListFunction;
   }
@@ -216,4 +216,4 @@ const VoucherForm = (
   );
 };
 
-export default VoucherForm;
+export default ReceiptVoucherForm;

@@ -17,10 +17,10 @@ import useDrawer from "@/hooks/useDrawer";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaPlus, FaRegFileAlt } from "react-icons/fa";
-import ProductForm from "./form/page";
+import ProductForm from "./form/paymentVoucherForm";
 import { DrawerOpen } from "@/state/drawer/slice";
-import VoucherForm from "./form/page";
-import PaymentVoucherForm from "./form/page";
+import VoucherForm from "./form/paymentVoucherForm";
+import PaymentVoucherForm from "./form/paymentVoucherForm";
 
 type TSaleModel = {
   id: number;
@@ -34,7 +34,6 @@ type TSaleModel = {
 function Page() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);

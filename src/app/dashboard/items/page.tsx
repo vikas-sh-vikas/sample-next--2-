@@ -17,7 +17,7 @@ import useDrawer from "@/hooks/useDrawer";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { FaCheck, FaEdit, FaPlus, FaRegFileAlt, FaTimes } from "react-icons/fa";
-import ProductForm from "./form/page";
+import ProductForm from "./form/productForm";
 import { DrawerOpen } from "@/state/drawer/slice";
 import useFetch from "@/hooks/useFetch";
 import { GetItemsList } from "@/utils/api.constant";
@@ -30,7 +30,6 @@ function Page() {
   const { post } = useFetch();
   const { onShowToast } = useToast();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);

@@ -17,9 +17,8 @@ import useDrawer from "@/hooks/useDrawer";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaPlus, FaRegFileAlt } from "react-icons/fa";
-import ProductForm from "./form/page";
 import { DrawerOpen } from "@/state/drawer/slice";
-import VoucherForm from "./form/page";
+import ReceiptVoucherForm from "./form/receiptVoucherForm";
 
 type TSaleModel = {
   id: number;
@@ -33,7 +32,6 @@ type TSaleModel = {
 function Page() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -168,7 +166,7 @@ function Page() {
       width: drawerWidth,
       name: "Show Drawer Form",
       Component: () => (
-        <VoucherForm
+        <ReceiptVoucherForm
           id={id}
           onRefreshList={() => {
             console.log("object");

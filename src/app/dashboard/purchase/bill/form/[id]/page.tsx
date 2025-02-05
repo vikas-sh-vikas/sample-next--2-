@@ -10,43 +10,43 @@ import PickDate from "@/components/ui/date-picker/date-picker";
 import { Button } from "@/components/ui/button/button";
 
 const InvoiceForm = () => {
-  const defaultValues: SaleFormModel = {
-    invoiceNumber: "",
-    invoiceDate: "",
-    shipTo: {
-      value: "",
-      label: "",
-    },
-    // shippingAddress: "",
-    billTo: {
-      value: "",
-      label: "",
-    },
-    // billingAddress: "",
-    itemArray: [
-      {
-        item: {
-          value: "",
-          label: "",
-        },
-        unit: {
-          value: "",
-          label: "",
-        },
-        qty: 0,
-        unitPrice: 0,
-        discount: 0,
-        gst: {
-          value: "",
-          label: "",
-        },
-        total: 0,
-      },
-    ],
-    laborCharges: 0,
-    freightCharges: 0,
-    total: 0,
-  };
+  // const defaultValues: SaleFormModel = {
+  //   invoiceNumber: "",
+  //   invoiceDate: "",
+  //   shipTo: {
+  //     value: "",
+  //     label: "",
+  //   },
+  //   // shippingAddress: "",
+  //   billTo: {
+  //     value: "",
+  //     label: "",
+  //   },
+  //   // billingAddress: "",
+  //   itemArray: [
+  //     {
+  //       item: {
+  //         value: "",
+  //         label: "",
+  //       },
+  //       unit: {
+  //         value: "",
+  //         label: "",
+  //       },
+  //       qty: 0,
+  //       unitPrice: 0,
+  //       discount: 0,
+  //       // gst: {
+  //       //   value: "",
+  //       //   label: "",
+  //       // },
+  //       total: 0,
+  //     },
+  //   ],
+  //   laborCharges: 0,
+  //   freightCharges: 0,
+  //   total: 0,
+  // };
   const customerOptions = [
     {
       value: "1",
@@ -113,8 +113,8 @@ const InvoiceForm = () => {
     formState: { errors, isSubmitting },
   } = useForm<SaleFormModel>({
     mode: "all",
-    defaultValues,
-    resolver: yupResolver(validationSchema),
+    // defaultValues,
+    // resolver: yupResolver(validationSchema),
   });
   const { fields, append, remove } = useFieldArray({
     control,
@@ -144,10 +144,6 @@ const InvoiceForm = () => {
       qty: 0,
       unitPrice: 0,
       discount: 0,
-      gst: {
-        value: "",
-        label: "",
-      },
       total: 0,
     });
   };
@@ -401,7 +397,7 @@ const InvoiceForm = () => {
                   />
                 </td>
                 <td className="border border-gray-300 p-3 text-gray-600">
-                  <FormDropdown
+                  {/* <FormDropdown
                     isRequired={true}
                     // label={"Ship To"}
                     className="border-none shadow-none z-50"
@@ -418,7 +414,7 @@ const InvoiceForm = () => {
                         shouldValidate: true,
                       });
                     }}
-                  ></FormDropdown>
+                  ></FormDropdown> */}
                 </td>
                 <td className="border border-gray-300 p-3 text-gray-600">
                   <FormInput

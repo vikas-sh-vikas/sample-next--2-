@@ -14,24 +14,22 @@ import {
   TableBody,
 } from "@/components/ui/table/table";
 import useDrawer from "@/hooks/useDrawer";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { FaCheck, FaEdit, FaPlus, FaRegFileAlt, FaTimes } from "react-icons/fa";
-import ProductForm from "./form/page";
 import { DrawerOpen } from "@/state/drawer/slice";
 import useFetch from "@/hooks/useFetch";
 import { GetItemsList, GetUserBankList } from "@/utils/api.constant";
 import useToast from "@/hooks/useToast";
 import { eResultCode } from "@/utils/enum";
 import { ToastOpen, ToastType } from "@/state/toast/slice";
-import BankForm from "./form/page";
+import BankForm from "./form/bankForm";
 
 function Page() {
   const router = useRouter();
   const { post } = useFetch();
   const { onShowToast } = useToast();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);

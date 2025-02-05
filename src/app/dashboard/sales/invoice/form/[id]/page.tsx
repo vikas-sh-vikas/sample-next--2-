@@ -9,7 +9,7 @@ import { FaCheck, FaPlus, FaTimes, FaTrash } from "react-icons/fa";
 import PickDate from "@/components/ui/date-picker/date-picker";
 import { Button } from "@/components/ui/button/button";
 import useDrawer from "@/hooks/useDrawer";
-import ProductForm from "@/app/dashboard/items/form/page";
+import ProductForm from "@/app/dashboard/items/form/productForm";
 import { DrawerOpen } from "@/state/drawer/slice";
 import { useEffect, useState } from "react";
 import {
