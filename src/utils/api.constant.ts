@@ -26,3 +26,7 @@ export const GetSpecificUnitsMasterData =
 export const AddEditGst = "/api/Config/AddEditGst";
 export const GetGstList = "/api/Config/GetGstList";
 export const GetSpecificGstMasterData = "/api/Config/GetSpecificGstMasterData";
+export const AddEditInvoice = "/api/Invoice/AddEditInvoice";
+export const GetInvoiceList = "/api/Invoice/GetInvoiceList";
+export const GetSpecificInvoiceMasterData =
+  "/api/Invoice/GetSpecificInvoiceMasterData";
