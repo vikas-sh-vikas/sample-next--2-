@@ -25,7 +25,6 @@ import { FaCheck, FaEdit, FaPlus, FaRegFileAlt, FaTimes } from "react-icons/fa";
 function Page() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);

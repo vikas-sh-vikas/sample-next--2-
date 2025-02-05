@@ -81,22 +81,22 @@ const InvoiceForm = ({ params }: any) => {
     taxAmount: null,
   };
 
-  const addProduct = () => {
-    onShowDrawer({
-      dimmer: true,
-      width: "45%",
-      name: "Show Drawer Form",
-      Component: () => (
-        <ProductForm
-          id={0}
-          onRefreshList={() => {
-            console.log("object");
-          }}
-        />
-      ),
-      position: DrawerOpen.right,
-    });
-  };
+  // const addProduct = () => {
+  //   onShowDrawer({
+  //     dimmer: true,
+  //     width: "45%",
+  //     name: "Show Drawer Form",
+  //     Component: () => (
+  //       <ProductForm
+  //         id={0}
+  //         onRefreshList={() => {
+  //           console.log("object");
+  //         }}
+  //       />
+  //     ),
+  //     position: DrawerOpen.right,
+  //   });
+  // };
 
   useEffect(() => {
     GetCustomerOptionList();

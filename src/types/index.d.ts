@@ -28,26 +28,36 @@ type TSaleModel = {
 };
 type SaleFormModel = {
   invoiceNumber: string;
-  invoiceDate: string;
+  date: string;
   shipTo: DropDownOption;
   billTo: DropDownOption;
   itemArray?: InvoiceItem[]; // Optional array
-  laborCharges?: number | null; // Optional and can be null
+  labourCharges?: number | null; // Optional and can be null
   freightCharges?: number | null; // Optional and can be null
   subTotal?: number | null; // Optional and can be null
   gst: DropDownOption; // Ensure that gst is either a valid DropDownOption or null
   total: number | null;
+  taxAmount?: number | null;
+  totalAmount?: number | null;
 };
 
 interface InvoiceItem {
   item: DropDownOption;
   unit: DropDownOption;
   qty: number;
+  hsnCode?: string;
   unitPrice: number;
   discount?: number; // Optional and can be null
   total: number;
 }
-
+type SaleIndexModel = {
+  id: number;
+  invoiceNumber: string;
+  date: string;
+  billToName?: string;
+  taxAmount?: number | null;
+  totalAmount?: number | null;
+};
 type DropDownOption = {
   label: string;
   value: string;

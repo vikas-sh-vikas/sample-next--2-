@@ -175,9 +175,9 @@ const InvoiceForm = () => {
             name="invoiceDate"
             // isRequired={true}
             label={"Invoice Date"}
-            selected={formValues.invoiceDate}
+            selected={formValues.date}
             onChange={(selected: any) => {
-              setValue(`invoiceDate`, selected, {
+              setValue(`date`, selected, {
                 shouldValidate: true,
               });
             }}
