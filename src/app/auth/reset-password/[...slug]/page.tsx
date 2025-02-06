@@ -56,15 +56,17 @@ export default function ResetPassword() {
     // resolver: yupResolver(validationSchema),
     defaultValues: { newPassword: "", confirmPassword: "" },
   });
-
   useEffect(() => {
     if (params?.slug) {
+      
       const [emailHex, timeHex] = params.slug;
+      console.log("object",emailHex)
       const emailDecrypted = EncryptUtils.decrypt(convertHexToString(emailHex));
       const timeDecrypted = EncryptUtils.decrypt(convertHexToString(timeHex));
-
+      
       setEmailId(emailDecrypted);
       setTime(timeDecrypted);
+      console.log("emailDecrypted",emailDecrypted)
     }
   }, [params]);
 
@@ -137,9 +139,9 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="bg-slate-200 grid grid-cols-2 p-4 sm:p-10 lg:p-20 min-h-screen">
+    <div className="bg-slate-200 grid grid-cols-2 p-20 min-h-screen">
       {passwordChanged ? (
-        <div className="bg-white rounded-xl flex flex-col justify-center items-center p-8 col-span-2 lg:col-span-1">
+        <div className="bg-white rounded-xl flex flex-col justify-center items-center p-8">
           <Image
             src="/assets/images/success.svg"
             alt="Success"
@@ -154,7 +156,7 @@ export default function ResetPassword() {
           </Link>
         </div>
       ) : (
-        <div className="bg-white rounded-xl p-8 col-span-2 lg:col-span-1">
+        <div className="bg-white rounded-xl p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <h1 className="text-4xl font-bold text-center text-gray-500 mb-4">
               Reset Password
@@ -188,7 +190,7 @@ export default function ResetPassword() {
           </form>
         </div>
       )}
-      <div className="hidden lg:block bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
+      <div className="bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
     </div>
   );
 }

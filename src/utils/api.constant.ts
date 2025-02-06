@@ -6,6 +6,7 @@
 export const ApiSignin = "/api/Auth/Login";
 export const GetSpecificUserMasterData = "/api/User/GetSpecificUserMasterData";
 export const ChangeResetPassword = "/api/Auth/ChangePassword";
+export const ResetPassword = "/api/Auth/ResetPassword";
 export const AddEditUser = "/api/Auth/SignUp";
 export const AddEditCompany = "/api/Company/AddEditCompany";
 export const GetCompanyList = "/api/Company/GetCompanyList";

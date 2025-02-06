@@ -15,8 +15,6 @@ type Inputs = {
 };
 type ForgotPasswordInputs = {
   registerEmail: string;
-  password: string;
-  reEnterPassword: string;
 };
 type TSaleModel = {
   id?: number;

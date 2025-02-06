@@ -5,26 +5,26 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Link from "next/link";
 import { FormInput } from "@/components/ui/form/form-input";
+import { ApiSignin, ResetPassword } from "@/utils/api.constant";
+import useFetch from "@/hooks/useFetch";
+import { eResultCode } from "@/utils/enum";
+import useToast from "@/hooks/useToast";
+import { ToastOpen, ToastType } from "@/state/toast/slice";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 function Forgotpassword() {
   const [toggle, setToggle] = useState(false);
+  const {post} = useFetch();
+  const {onShowToast} = useToast();
   const defaultValues: ForgotPasswordInputs = {
     registerEmail: "",
-    password: "",
-    reEnterPassword: "",
   };
   const validationSchema = yup.object({
     registerEmail: yup.string().required("Email is required"),
-    password: yup.string().required("Password is required"),
-    reEnterPassword: yup.string().required("Re Enter is required"),
   });
   const {
     register,
     handleSubmit,
-    reset,
-    getValues,
-    setValue,
-    control,
     formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordInputs>({
     mode: "all",
@@ -33,59 +33,58 @@ function Forgotpassword() {
   });
 
   const onSubmit: SubmitHandler<ForgotPasswordInputs> = async (data) => {
-    console.log("object", data);
-    if (data.password != data.reEnterPassword) {
+    try {
+      console.log("Data", data);
+      setToggle(true);
+      const payload = {
+        data:{
+          emailId: data.registerEmail,
+        }
+      };
+      const response = await post(ResetPassword, payload);
+
+      if (response.dataResponse.returnCode == eResultCode.SUCCESS) {
+        {
+          // console.log(response);
+          onShowToast({
+            type: ToastType.success,
+            title: <FaCheck />,
+            position: ToastOpen.leftBottom,
+            content: response.dataResponse.description,
+          });
+
+          // setTimeout(() => {
+          //   AuthUtil.setToken(response.authToken);
+          //   Utils.redirectUrl(Routes.Dashboard);
+          // }, 700);
+          setToggle(false);
+        }
+
+        // cookie.save("accessToken", authToken, defaultOptions);
+        // router.push(`/dashboard`);
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: response.dataResponse.description,
+        });
+        setToggle(false);
+      }
+    } catch (error: any) {
+      onShowToast({
+        type: ToastType.error,
+        title: <FaTimes />,
+        position: ToastOpen.leftBottom,
+        content: "error",
+      });
+      setToggle(false);
     }
-    // else{
-    //   try {
-    //     setToggle(true);
-    //     const response = await fetch("http://localhost:8000/api/users/login", {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify(data),
-    //     });
-    //     if (!response.ok) {
-    //       const errorResponse = await response.json();
-    //       toast.error(errorResponse.message || "An unexpected error occurred", {
-    //         theme: "colored",
-    //         position: "bottom-left"
-    //       })
-    //       setToggle(false);
+    };
 
-    //     }        const result = await response.json();
-    //       const { user, accessToken, refreshToken } = result.data;
-    //       userData.updateUserState({
-    //         name: user.fullName,
-    //         email: user.email,
-    //         photo: user.avatar,
-    //       });
-
-    //       cookie.save("accessToken", accessToken, defaultOptions);
-    //       cookie.save("refreshToken", refreshToken, defaultOptions);
-    //       toast.success(result.message, {
-    //         theme: "colored",
-    //         position: "bottom-left"
-    //       })
-    //       await router.push("/dashboard/profile");
-    //       setToggle(false);
-
-    //   } catch (error) {
-    //     toast.error("Error", {
-    //       theme: "colored",
-    //       position: "bottom-left"
-    //     })
-
-    //     setToggle(false);
-    //   }
-    // }
-  };
-
-  // console.log("FormValues",formValues)
   return (
-    <div className="bg-slate-200 grid grid-cols-2 p-4 sm:p-10 lg:p-20 min-h-screen">
-      <div className="bg-white rounded-xl col-span-2 lg:col-span-1">
+    <div className="bg-slate-200 grid grid-cols-2 p-20 min-h-screen">
+      <div className="bg-white rounded-xl">
         <form
           className="flex flex-col justify-between h-full m-auto  p-8"
           onSubmit={handleSubmit(onSubmit)}
@@ -145,7 +144,7 @@ function Forgotpassword() {
           </div>
         </form>
       </div>
-      <div className="hidden lg:block bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
+      <div className="bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
     </div>
   );
 }
