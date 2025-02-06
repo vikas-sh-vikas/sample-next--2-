@@ -41,7 +41,7 @@ export default function ToastContainer(props: ToastProps) {
 
   return (
     <div
-      className={`fixed flex items-center p-5 w-1/3 z-50 animate-popup ${positionClasses[position]}`}
+      className={`fixed flex items-center p-5 w-1/3 z-[1000] animate-popup ${positionClasses[position]}`}
     >
       <div
         className={`bg-aqua text-white p-5 w-full rounded-lg flex items-center justify-center gap-3 mb-8 ${typeClasses[type]}`}

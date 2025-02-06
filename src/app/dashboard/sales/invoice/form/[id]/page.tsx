@@ -9,6 +9,7 @@ import { FaCheck, FaPlus, FaTimes, FaTrash } from "react-icons/fa";
 import PickDate from "@/components/ui/date-picker/date-picker";
 import { Button } from "@/components/ui/button/button";
 import useDrawer from "@/hooks/useDrawer";
+import ProductForm from "@/app/dashboard/items/form/productForm";
 import { DrawerOpen } from "@/state/drawer/slice";
 import { use, useEffect, useState } from "react";
 import Loader from "@/components/ui/loader/loader";
@@ -26,11 +27,12 @@ import { ToastOpen, ToastType } from "@/state/toast/slice";
 import useFetch from "@/hooks/useFetch";
 import { truncate } from "node:fs/promises";
 import { useRouter } from "next/navigation";
+
 type OptionsSet = {
   customerOptions: DropDownOption[];
   itemOptions: DropDownOption[];
   unitOptions: DropDownOption[];
-  gstOptions: DropDownOption[];
+  gstOptions: GSTDropDownOption[];
 };
 
 const InvoiceForm = ({ params }: any) => {
@@ -72,6 +74,7 @@ const InvoiceForm = ({ params }: any) => {
     gst: {
       value: "",
       label: "",
+      percentage: "",
     },
     subTotal: null,
     labourCharges: null,
@@ -81,22 +84,22 @@ const InvoiceForm = ({ params }: any) => {
     taxAmount: null,
   };
 
-  // const addProduct = () => {
-  //   onShowDrawer({
-  //     dimmer: true,
-  //     width: "45%",
-  //     name: "Show Drawer Form",
-  //     Component: () => (
-  //       <ProductForm
-  //         id={0}
-  //         onRefreshList={() => {
-  //           console.log("object");
-  //         }}
-  //       />
-  //     ),
-  //     position: DrawerOpen.right,
-  //   });
-  // };
+  const addProduct = () => {
+    onShowDrawer({
+      dimmer: true,
+      width: "45%",
+      name: "Show Drawer Form",
+      Component: () => (
+        <ProductForm
+          id={0}
+          onRefreshList={() => {
+            console.log("object");
+          }}
+        />
+      ),
+      position: DrawerOpen.right,
+    });
+  };
 
   useEffect(() => {
     GetCustomerOptionList();
@@ -326,7 +329,8 @@ const InvoiceForm = ({ params }: any) => {
 
         const gstOptions = Data.map((item: any) => ({
           label: item.gstName,
-          value: item.percentage.toString(), // Convert id to string
+          value: item.id.toString(), // Convert id to string
+          percentage: item.percentage.toString(), // Convert id to string
         }));
 
         setOptions((precData: any) => ({
@@ -392,6 +396,7 @@ const InvoiceForm = ({ params }: any) => {
     gst: yup.object().shape({
       label: yup.string().required("GST is required"),
       value: yup.string().required("GST is required"),
+      percentage: yup.string().required("GST is required"),
     }), // Optional field, set to nullable
     total: yup.number().required("Total is required").nullable(),
   });
@@ -486,7 +491,7 @@ const InvoiceForm = ({ params }: any) => {
     });
   };
   return isLoading ? (
-    <Loader size={"30"} />
+    <Loader size={"35"} className="text-indigo-600" />
   ) : (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -727,7 +732,9 @@ const InvoiceForm = ({ params }: any) => {
                         ) ?? 0) +
                           (formValues.labourCharges ?? 0) +
                           (formValues.freightCharges ?? 0)) *
-                          (parseFloat(formValues.gst.value) / 100)
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0)
                       );
                       setValue(
                         "totalAmount",
@@ -738,7 +745,9 @@ const InvoiceForm = ({ params }: any) => {
                         ) ?? 0) +
                           (formValues.labourCharges ?? 0) +
                           (formValues.freightCharges ?? 0)) *
-                          (parseFloat(formValues.gst.value) / 100) +
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0) +
                           (formValues.itemArray?.reduce(
                             (sum: number, item: any) =>
                               parseFloat(sum + (item.total || 0)),
@@ -804,7 +813,9 @@ const InvoiceForm = ({ params }: any) => {
                         ) ?? 0) +
                           (formValues.labourCharges ?? 0) +
                           (formValues.freightCharges ?? 0)) *
-                          (parseFloat(formValues.gst.value) / 100)
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0)
                       );
                       setValue(
                         "totalAmount",
@@ -815,7 +826,9 @@ const InvoiceForm = ({ params }: any) => {
                         ) ?? 0) +
                           (formValues.labourCharges ?? 0) +
                           (formValues.freightCharges ?? 0)) *
-                          (parseFloat(formValues.gst.value) / 100) +
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0) +
                           (formValues.itemArray?.reduce(
                             (sum: number, item: any) =>
                               parseFloat(sum + (item.total || 0)),
@@ -879,7 +892,9 @@ const InvoiceForm = ({ params }: any) => {
                         ) ?? 0) +
                           (formValues.labourCharges ?? 0) +
                           (formValues.freightCharges ?? 0)) *
-                          (parseFloat(formValues.gst.value) / 100)
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0)
                       );
                       setValue(
                         "totalAmount",
@@ -890,7 +905,9 @@ const InvoiceForm = ({ params }: any) => {
                         ) ?? 0) +
                           (formValues.labourCharges ?? 0) +
                           (formValues.freightCharges ?? 0)) *
-                          (parseFloat(formValues.gst.value) / 100) +
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0) +
                           (formValues.itemArray?.reduce(
                             (sum: number, item: any) =>
                               parseFloat(sum + (item.total || 0)),
@@ -977,7 +994,9 @@ const InvoiceForm = ({ params }: any) => {
                 ((formValues.subTotal ?? 0) +
                   (parseFloat(e.target.value) || 0) +
                   (formValues.freightCharges ?? 0)) *
-                  (parseFloat(formValues.gst.value) / 100)
+                  (formValues.gst.percentage
+                    ? parseFloat(formValues.gst.percentage) / 100
+                    : 0)
               );
               setValue(
                 "totalAmount",
@@ -987,7 +1006,9 @@ const InvoiceForm = ({ params }: any) => {
                   ((formValues.subTotal ?? 0) +
                     (parseFloat(e.target.value) || 0) +
                     (formValues.freightCharges ?? 0)) *
-                    (parseFloat(formValues.gst.value) / 100)
+                    (formValues.gst.percentage
+                      ? parseFloat(formValues.gst.percentage) / 100
+                      : 0)
               );
             }}
             placeholder={"Enter Labor"}
@@ -1015,7 +1036,9 @@ const InvoiceForm = ({ params }: any) => {
                 ((formValues.subTotal ?? 0) +
                   (parseFloat(e.target.value) || 0) +
                   (formValues.labourCharges ?? 0)) *
-                  (parseFloat(formValues.gst.value) / 100)
+                  (formValues.gst.percentage
+                    ? parseFloat(formValues.gst.percentage) / 100
+                    : 0)
               );
               setValue(
                 "totalAmount",
@@ -1025,7 +1048,9 @@ const InvoiceForm = ({ params }: any) => {
                   ((formValues.subTotal ?? 0) +
                     (parseFloat(e.target.value) || 0) +
                     (formValues.labourCharges ?? 0)) *
-                    (parseFloat(formValues.gst.value) / 100)
+                    (formValues.gst.percentage
+                      ? parseFloat(formValues.gst.percentage) / 100
+                      : 0)
               );
             }}
             length={"full"}
@@ -1053,13 +1078,17 @@ const InvoiceForm = ({ params }: any) => {
             setValue(`gst.label`, selected.label, {
               shouldValidate: true,
             });
+            setValue(`gst.percentage`, selected.percentage, {
+              shouldValidate: true,
+            });
             setValue(
               "taxAmount",
-              (formValues.total ?? 0) * (parseFloat(selected.value) / 100)
+              (formValues.total ?? 0) * (parseFloat(selected.percentage) / 100)
             );
             setValue(
               "totalAmount",
-              (formValues.total ?? 0) * (parseFloat(selected.value) / 100) +
+              (formValues.total ?? 0) *
+                (parseFloat(selected.percentage) / 100) +
                 (formValues.total ?? 0)
             );
           }}
@@ -1108,6 +1137,7 @@ const InvoiceForm = ({ params }: any) => {
         >
           View Report
         </Button>
+        {/* <InvoicePage /> */}
       </div>
     </form>
   );

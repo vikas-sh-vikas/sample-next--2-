@@ -101,8 +101,8 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-slate-200 grid grid-cols-2 p-20 min-h-screen">
-      <div className="bg-white rounded-xl">
+    <div className="bg-slate-200 grid grid-cols-2 p-4 sm:p-10 lg:p-20 min-h-screen">
+      <div className="bg-white rounded-xl col-span-2 lg:col-span-1">
         <form className="m-auto p-8" onSubmit={handleSubmit(onSubmit)}>
           <h1 className="text-4xl font-bold text-center p-5 text-gray-500">
             Register
@@ -209,7 +209,7 @@ export default function Login() {
           </div>
         </form>
       </div>
-      <div className="bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
+      <div className="hidden lg:block bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
     </div>
   );
 }

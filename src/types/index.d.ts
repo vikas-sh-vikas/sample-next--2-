@@ -26,6 +26,12 @@ type TSaleModel = {
   contactPerson: string;
   contactDetail: string;
 };
+
+interface GSTDropDownOption {
+  label: string;
+  value: string;
+  percentage: string;
+}
 type SaleFormModel = {
   invoiceNumber: string;
   date: string;
@@ -35,7 +41,7 @@ type SaleFormModel = {
   labourCharges?: number | null; // Optional and can be null
   freightCharges?: number | null; // Optional and can be null
   subTotal?: number | null; // Optional and can be null
-  gst: DropDownOption; // Ensure that gst is either a valid DropDownOption or null
+  gst: GSTDropDownOption; // Ensure that gst is either a valid DropDownOption or null
   total: number | null;
   taxAmount?: number | null;
   totalAmount?: number | null;

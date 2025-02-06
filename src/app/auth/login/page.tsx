@@ -4,12 +4,9 @@ import React, { useContext, useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { Input } from "@/components/ui/input/input";
 import { FaCheck, FaTimes } from "react-icons/fa";
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import cookie from "react-cookies";
 import { UserContext } from "@/context/context";
 import useToast from "@/hooks/useToast";
 import { ToastOpen, ToastType } from "@/state/toast/slice";
@@ -69,13 +66,6 @@ export default function Login() {
       };
       const response = await post(ApiSignin, payload);
 
-      // const response = await post("http://localhost:5001/api/Auth/Login", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(payload),
-      // });
       if (response.dataResponse.returnCode == eResultCode.SUCCESS) {
         {
           // console.log(response);
@@ -116,8 +106,8 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-slate-200 grid grid-cols-2 p-20 min-h-screen">
-      <div className="bg-white rounded-xl">
+    <div className="bg-slate-200 grid grid-cols-2 p-4 sm:p-10 lg:p-20 min-h-screen">
+      <div className="bg-white rounded-xl  col-span-2 lg:col-span-1">
         <form
           className="flex flex-col justify-between h-full m-auto  p-8"
           onSubmit={handleSubmit(onSubmit)}
@@ -184,7 +174,7 @@ export default function Login() {
           </div>
         </form>
       </div>
-      <div className="bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
+      <div className="hidden lg:block bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
     </div>
   );
 }

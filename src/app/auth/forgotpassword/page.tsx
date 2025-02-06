@@ -84,8 +84,8 @@ function Forgotpassword() {
 
   // console.log("FormValues",formValues)
   return (
-    <div className="bg-slate-200 grid grid-cols-2 p-20 min-h-screen">
-      <div className="bg-white rounded-xl">
+    <div className="bg-slate-200 grid grid-cols-2 p-4 sm:p-10 lg:p-20 min-h-screen">
+      <div className="bg-white rounded-xl col-span-2 lg:col-span-1">
         <form
           className="flex flex-col justify-between h-full m-auto  p-8"
           onSubmit={handleSubmit(onSubmit)}
@@ -145,7 +145,7 @@ function Forgotpassword() {
           </div>
         </form>
       </div>
-      <div className="bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
+      <div className="hidden lg:block bg-[url('/login.jpg')] bg-cover bg-center bg-no-repeat h-full w-full"></div>
     </div>
   );
 }

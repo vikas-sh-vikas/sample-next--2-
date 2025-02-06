@@ -7,17 +7,14 @@ import { FormInput } from "@/components/ui/form/form-input";
 import { FormDropdown } from "@/components/ui/form/form-dropdown";
 import { Button } from "@/components/ui/button/button";
 import useDrawer from "@/hooks/useDrawer";
-import {
-  AddEditItems,
-  GetSpecificCompanyMasterData,
-  GetSpecificItemsMasterData,
-} from "@/utils/api.constant";
+import { AddEditItems, GetSpecificItemsMasterData } from "@/utils/api.constant";
 import useToast from "@/hooks/useToast";
 import { eResultCode } from "@/utils/enum";
 import { ToastOpen, ToastType } from "@/state/toast/slice";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import useFetch from "@/hooks/useFetch";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Loader from "@/components/ui/loader/loader";
 
 export type DrawerProps = {
   isOpen?: any;
@@ -54,13 +51,16 @@ const ProductForm = (
     { value: "1", label: "Group A" },
     { value: "2", label: "Group B" },
   ];
+  const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     if (props.id > 0) {
       getSpecificData(props.id);
     }
   }, []);
   const getSpecificData = async (id: number) => {
+    setIsLoading(true);
     try {
+      isLoading;
       const payload = {
         data: {
           id: id,
@@ -99,7 +99,7 @@ const ProductForm = (
     } catch (error) {
       console.log(error);
     } finally {
-      // setIsLoading(false);
+      setIsLoading(false);
     }
   };
   const unitOptions = [
@@ -138,7 +138,7 @@ const ProductForm = (
 
   const onSubmit: SubmitHandler<ItemsModel> = async (values: ItemsModel) => {
     console.log("Submitted values", values);
-
+    // setIsLoading(true);
     try {
       const payload = {
         data: {
@@ -187,108 +187,120 @@ const ProductForm = (
     >
       {/* Submit Section */}
       <div className="flex space-x-4 justify-end py-4">
-        <Button type="submit" variant="blue">
+        <Button disabled={isLoading} type="submit" variant="blue">
           Submit
         </Button>
         <Button variant="grey" onClick={onCloseDrawer}>
           Cancel
         </Button>
       </div>
-
       <h2 className="text-2xl font-bold mb-6 text-center">Product Details</h2>
       <hr className="mb-5"></hr>
+      <div className="h-screen">
+        {isLoading ? (
+          <Loader size={"35"} className="text-indigo-600" />
+        ) : (
+          <div>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <FormInput
+                  type="text"
+                  label="Product Name"
+                  error={errors.productName?.message}
+                  isRequired={true}
+                  length={"full"}
+                  name="productName"
+                  register={register}
+                  placeholder="Enter Product Name"
+                />
+              </div>
+              <div>
+                <FormDropdown
+                  isRequired={true}
+                  label="Group"
+                  name="group"
+                  error={errors.group?.value?.message}
+                  placeholder="Select Group"
+                  options={groupOptions}
+                  value={formValues.unit?.value}
+                  onChange={(selected: any) => {
+                    setValue("group.value", selected.value, {
+                      shouldValidate: true,
+                    });
+                    setValue("group.label", selected.label, {
+                      shouldValidate: true,
+                    });
+                  }}
+                />
+              </div>
+            </div>
 
-      {/* Product Details Section */}
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <FormInput
-            type="text"
-            label="Product Name"
-            error={errors.productName?.message}
-            isRequired={true}
-            length={"full"}
-            name="productName"
-            register={register}
-            placeholder="Enter Product Name"
-          />
-        </div>
-        <div>
-          <FormDropdown
-            isRequired={true}
-            label="Group"
-            name="group"
-            error={errors.group?.value?.message}
-            placeholder="Select Group"
-            options={groupOptions}
-            value={formValues.unit?.value}
-            onChange={(selected: any) => {
-              setValue("group.value", selected.value, { shouldValidate: true });
-              setValue("group.label", selected.label, { shouldValidate: true });
-            }}
-          />
-        </div>
-      </div>
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <div>
+                <FormDropdown
+                  isRequired={true}
+                  label="Unit"
+                  name="unit"
+                  value={formValues.unit?.value}
+                  error={errors.unit?.value?.message}
+                  placeholder="Select Unit"
+                  options={unitOptions}
+                  onChange={(selected: any) => {
+                    setValue("unit.value", selected.value, {
+                      shouldValidate: true,
+                    });
+                    setValue("unit.label", selected.label, {
+                      shouldValidate: true,
+                    });
+                  }}
+                />
+              </div>
+              <div>
+                <FormInput
+                  type="text"
+                  label="Description"
+                  error={errors.description?.message}
+                  isRequired={true}
+                  name="description"
+                  register={register}
+                  length={"full"}
+                  placeholder="Enter Description"
+                />
+              </div>
+            </div>
 
-      <div className="grid grid-cols-2 gap-6 mt-6">
-        <div>
-          <FormDropdown
-            isRequired={true}
-            label="Unit"
-            name="unit"
-            value={formValues.unit?.value}
-            error={errors.unit?.value?.message}
-            placeholder="Select Unit"
-            options={unitOptions}
-            onChange={(selected: any) => {
-              setValue("unit.value", selected.value, { shouldValidate: true });
-              setValue("unit.label", selected.label, { shouldValidate: true });
-            }}
-          />
-        </div>
-        <div>
-          <FormInput
-            type="text"
-            label="Description"
-            error={errors.description?.message}
-            isRequired={true}
-            name="description"
-            register={register}
-            length={"full"}
-            placeholder="Enter Description"
-          />
-        </div>
-      </div>
-
-      {/* GST Details Section */}
-      {/* <h3 className="text-xl font-semibold mt-6 mb-4">GST Details</h3> */}
-      <div className="grid grid-cols-2 gap-6 mt-6">
-        <div>
-          <FormInput
-            type="text"
-            label="HSN Code"
-            length={"full"}
-            error={errors.hsnCode?.message}
-            isRequired={true}
-            name="hsnCode"
-            register={register}
-            placeholder="Enter HSN Code"
-          />
-        </div>
-        <div>
-          <FormInput
-            type="number"
-            label="Price"
-            length={"full"}
-            error={errors.price?.message}
-            isRequired={true}
-            name="price"
-            register={register}
-            placeholder="Enter IGST"
-          />
-        </div>
+            {/* GST Details Section */}
+            {/* <h3 className="text-xl font-semibold mt-6 mb-4">GST Details</h3> */}
+            <div className="grid grid-cols-2 gap-6 mt-6">
+              <div>
+                <FormInput
+                  type="text"
+                  label="HSN Code"
+                  length={"full"}
+                  error={errors.hsnCode?.message}
+                  isRequired={true}
+                  name="hsnCode"
+                  register={register}
+                  placeholder="Enter HSN Code"
+                />
+              </div>
+              <div>
+                <FormInput
+                  type="number"
+                  label="Price"
+                  length={"full"}
+                  error={errors.price?.message}
+                  isRequired={true}
+                  name="price"
+                  register={register}
+                  placeholder="Enter IGST"
+                />
+              </div>
+            </div>
+          </div>
+        )}{" "}
       </div>
     </form>
   );
 };
-
 export default ProductForm;

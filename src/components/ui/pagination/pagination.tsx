@@ -61,7 +61,6 @@ export default function Pagination(props: PaginationProps) {
       fetchdata(newIndex, pageSize, searchText as string);
     }
   };
-
   const options = [
     { value: 10, label: "10" },
     { value: 20, label: "20" },
@@ -143,17 +142,17 @@ export default function Pagination(props: PaginationProps) {
         className={ClassNames}
         previousLabel={<FaChevronLeft />}
         marginPagesDisplayed={1}
-        nextClassName="inline-block"
-        pageClassName="inline-block"
-        activeClassName="bg-blue-500 text-white"
-        breakClassName="inline-block"
+        nextClassName="flex items-center"
+        pageClassName="flex items-center"
+        activeClassName="bg-indigo-600 text-white border rounded-md"
+        breakClassName="flex items-center"
         disabledClassName="text-gray-400 cursor-not-allowed"
-        nextLinkClassName="block text-blue-500 px-2 py-1 rounded"
+        nextLinkClassName="block text-indigo-600 px-2 py-1 rounded"
         pageLinkClassName="block px-2 py-1 rounded"
-        previousClassName="inline-block"
-        breakLinkClassName="block text-blue-500 px-2 py-1 rounded"
+        previousClassName="flex items-center"
+        breakLinkClassName="block text-indigo-600 px-2 py-1 rounded"
         containerClassName="flex justify-end pr-4"
-        previousLinkClassName="block text-blue-500 px-2 py-1 rounded"
+        previousLinkClassName="block text-indigo-600 px-2 py-1 rounded cursor-pointer text-center"
         onPageChange={handlePageClick}
         forcePage={
           currentPage && currentPage <= pageCount ? currentPage - 1 : 0

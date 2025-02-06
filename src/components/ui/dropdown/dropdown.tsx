@@ -57,10 +57,10 @@ export default function Dropdown(props: DropdownProps) {
   const customStyles = {
     option: (base: any, { isSelected }: any) => ({
       ...base,
-      backgroundColor: isSelected ? "#ec1a23" : "#fff",
+      backgroundColor: isSelected ? "oklch(0.511 0.262 276.966)" : "#fff",
       "&:hover": {
-        borderColor: "red",
-        backgroundColor: "#ffebec",
+        borderColor: "oklch(0.511 0.262 276.966)",
+        backgroundColor: "oklch(0.962 0.018 272.314)",
         color: "#2c2c2c",
       },
     }),
