@@ -296,14 +296,14 @@ const ProductForm = (
         </div>
       </div>
       <div>
-      <div className="flex space-x-4 justify-end py-4">
-        <Button disabled={isLoading} type="submit" variant="blue">
-          Submit
-        </Button>
-        <Button variant="grey" onClick={onCloseDrawer}>
-          Cancel
-        </Button> 
-      </div>
+        <div className="flex space-x-4 justify-end py-4">
+          <Button disabled={isLoading} type="submit" variant="blue">
+            Submit
+          </Button>
+          <Button variant="grey" onClick={onCloseDrawer}>
+            Cancel
+          </Button>
+        </div>
       </div>
     </form>
   );

@@ -9,13 +9,14 @@ import useDrawer from "@/hooks/useDrawer";
 import useToast from "@/hooks/useToast";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import useFetch from "@/hooks/useFetch";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   AddEditUserBank,
   GetSpecificUserBankMasterData,
 } from "@/utils/api.constant";
 import { eResultCode } from "@/utils/enum";
 import { ToastOpen, ToastType } from "@/state/toast/slice";
+import Loader from "@/components/ui/loader/loader";
 
 export type DrawerProps = {
   isOpen?: any;
@@ -31,6 +32,8 @@ const BankForm = (
   }
 ) => {
   const { onCloseDrawer } = useDrawer();
+  const [isLoading, setIsLoading] = useState(false);
+
   const defaultValues: UserBankModel = {
     id: 0,
     bankName: "",
@@ -75,6 +78,7 @@ const BankForm = (
     }
   }, []);
   const getSpecificData = async (id: number) => {
+    setIsLoading(true)
     try {
       const payload = {
         data: {
@@ -108,7 +112,7 @@ const BankForm = (
     } catch (error) {
       console.log(error);
     } finally {
-      // setIsLoading(false);
+      setIsLoading(false);
     }
   };
   const onSubmit: SubmitHandler<UserBankModel> = async (
@@ -156,21 +160,20 @@ const BankForm = (
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full mx-auto p-6 bg-white"
+      className="h-full flex flex-col justify-between w-full mx-auto p-6 bg-white"
     >
       {/* Submit Section */}
-      <div className="flex space-x-4 justify-end py-4">
-        <Button type="submit" variant="blue">
-          Submit
-        </Button>
-        <Button variant="grey" onClick={onCloseDrawer}>
-          Cancel
-        </Button>
-      </div>
 
+
+      <div>
       <h2 className="text-2xl font-bold mb-6 text-center">Bank Details</h2>
       <hr className="mb-5"></hr>
 
+        <div>
+          {isLoading ? (
+            <Loader size={"35"} className="text-indigo-600" />
+          ) : (
+            <div>
       {/* Bank Details Section */}
       <div className="grid grid-cols-2 gap-6">
         <div>
@@ -279,6 +282,21 @@ const BankForm = (
           />
         </div>
       </div>
+      </div>
+          )}{" "}
+        </div>
+      </div>
+      <div>
+
+<div className="flex space-x-4 justify-end py-4">
+  <Button type="submit" variant="blue">
+    Submit
+  </Button>
+  <Button variant="grey" onClick={onCloseDrawer}>
+    Cancel
+  </Button>
+</div>
+</div>
     </form>
   );
 };

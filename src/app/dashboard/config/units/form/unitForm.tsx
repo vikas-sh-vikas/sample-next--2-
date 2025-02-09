@@ -9,7 +9,7 @@ import useDrawer from "@/hooks/useDrawer";
 import useToast from "@/hooks/useToast";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import useFetch from "@/hooks/useFetch";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   AddEditUnits,
   AddEditUserBank,
@@ -18,6 +18,7 @@ import {
 } from "@/utils/api.constant";
 import { eResultCode } from "@/utils/enum";
 import { ToastOpen, ToastType } from "@/state/toast/slice";
+import Loader from "@/components/ui/loader/loader";
 
 export type DrawerProps = {
   isOpen?: any;
@@ -58,6 +59,7 @@ const UnitForm = (
     defaultValues,
     resolver: yupResolver(validationSchema),
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (props.id > 0) {
@@ -65,6 +67,7 @@ const UnitForm = (
     }
   }, []);
   const getSpecificData = async (id: number) => {
+    setIsLoading(true);
     try {
       const payload = {
         data: {
@@ -82,7 +85,7 @@ const UnitForm = (
           position: ToastOpen.leftBottom,
           content: description,
         });
-        const formData = response.data[0];
+        const formData = response.data;
 
         reset({
           ...formData,
@@ -98,7 +101,7 @@ const UnitForm = (
     } catch (error) {
       console.log(error);
     } finally {
-      // setIsLoading(false);
+      setIsLoading(false);
     }
   };
   const onSubmit: SubmitHandler<UnitsModel> = async (values: UnitsModel) => {
@@ -144,46 +147,55 @@ const UnitForm = (
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full mx-auto p-6 bg-white"
+      className="h-full flex flex-col justify-between w-full mx-auto p-6 bg-white"
     >
       {/* Submit Section */}
-      <div className="flex space-x-4 justify-end py-4">
-        <Button type="submit" variant="blue">
-          Submit
-        </Button>
-        <Button variant="grey" onClick={onCloseDrawer}>
-          Cancel
-        </Button>
-      </div>
 
-      <h2 className="text-2xl font-bold mb-6 text-center">Unit Details</h2>
-      <hr className="mb-5"></hr>
-
-      {/* Bank Details Section */}
-      <div className="grid grid-cols-1 gap-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-6 text-center">Unit Details</h2>
+        <hr className="mb-5"></hr>
+        {/* Bank Details Section */}
         <div>
-          <FormInput
-            type="text"
-            label="Unit Name"
-            length={"full"}
-            error={errors.unitName?.message}
-            isRequired={true}
-            name="unitName"
-            register={register}
-            placeholder="Enter Unit Name"
-          />
+          {isLoading ? (
+            <Loader size={"35"} className="text-indigo-600" />
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <FormInput
+                  type="text"
+                  label="Unit Name"
+                  length={"full"}
+                  error={errors.unitName?.message}
+                  isRequired={true}
+                  name="unitName"
+                  register={register}
+                  placeholder="Enter Unit Name"
+                />
+              </div>
+              <div>
+                <FormInput
+                  type="text"
+                  label="Short Code"
+                  length={"full"}
+                  error={errors.shortCode?.message}
+                  isRequired={true}
+                  name="shortCode"
+                  register={register}
+                  placeholder="Enter Short Code"
+                />
+              </div>
+            </div>
+          )}{" "}
         </div>
-        <div>
-          <FormInput
-            type="text"
-            label="Short Code"
-            length={"full"}
-            error={errors.shortCode?.message}
-            isRequired={true}
-            name="shortCode"
-            register={register}
-            placeholder="Enter Short Code"
-          />
+      </div>
+      <div>
+        <div className="flex space-x-4 justify-end py-4">
+          <Button type="submit" variant="blue">
+            Submit
+          </Button>
+          <Button variant="grey" onClick={onCloseDrawer}>
+            Cancel
+          </Button>
         </div>
       </div>
     </form>

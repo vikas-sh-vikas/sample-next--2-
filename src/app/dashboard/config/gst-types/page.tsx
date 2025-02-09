@@ -89,8 +89,12 @@ function Page() {
   }, [currentPage, pageSize, searchText]); // Re-fetch data on page change, searchText, or pageSize change
   const handleEdit = (id: number) => {
     // router.push(pathname + `/form/${id}`);
-    const drawerWidth = "45%";
-    onShowDrawer({
+    const drawerWidth = window.innerWidth <= 640 
+    ? "100%" 
+    : window.innerWidth <= 1024 
+      ? "60%" 
+      : "45%";
+          onShowDrawer({
       dimmer: true,
       width: drawerWidth,
       name: "Show Drawer Form",
@@ -142,8 +146,11 @@ function Page() {
     else fetchData(currentPage, searchText, pageSize);
   };
   const handleAdd = (id: number) => {
-    const drawerWidth = "45%";
-    onShowDrawer({
+    const drawerWidth = window.innerWidth <= 640 
+    ? "100%" 
+    : window.innerWidth <= 1024 
+      ? "60%" 
+      : "45%";    onShowDrawer({
       dimmer: true,
       width: drawerWidth,
       name: "Show Drawer Form",
