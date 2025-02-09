@@ -24,7 +24,6 @@ export default function Login() {
   const router = useRouter();
   const { post } = useFetch();
   const { showToast, onShowToast } = useToast();
-
   const [toggle, setToggle] = useState(false);
   const userData = useContext(UserContext);
   const { DOMAIN } = process.env;

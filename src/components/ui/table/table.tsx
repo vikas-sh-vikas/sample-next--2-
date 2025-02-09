@@ -58,7 +58,7 @@ export function TableHeadCell(props: TableProps) {
   return (
     <th
       style={{ width: props.width, height: props.height }}
-      className={`text-center p-2 cursor-pointer ${props.classNames}`}
+      className={`text-center p-2 cursor-pointer ${props.classNames} bg-indigo-600 text-white`}
       onClick={handleHeaderClick}
     >
       <div className={`flex items-center justify-${variant} gap-1`}>

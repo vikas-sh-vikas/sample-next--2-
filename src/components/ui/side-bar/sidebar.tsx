@@ -109,6 +109,7 @@ import {
   FaRegBuilding,
 } from "react-icons/fa";
 import { IconType } from "react-icons";
+import useDrawer from "@/hooks/useDrawer";
 
 // Mapping of icon names to actual icon components
 const iconMapping: { [key: string]: IconType } = {
@@ -125,13 +126,13 @@ const iconMapping: { [key: string]: IconType } = {
 };
 
 const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
   const router = useRouter();
-
+  const {onCloseDrawer} = useDrawer();
   const navigate = (path: string) => {
     router.push(path);
-    setIsOpen(false); // Close sidebar after navigation
+    onCloseDrawer()
+    // setIsOpen(false); // Close sidebar after navigation
   };
 
   // Toggle expand/collapse for a menu item
@@ -177,17 +178,10 @@ const Sidebar = () => {
   return (
     <>
       {/* Toggle button for small screens */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 bg-gray-800 text-white sm:hidden"
-      >
-        {isOpen ? "Close" : "Menu"}
-      </button>
 
       {/* Sidebar */}
       <div
-        className={`fixed sm:relative w-full h-screen bg-white text-gray-800 flex flex-col transform ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed sm:relative w-full h-screen bg-white text-gray-800 flex flex-col transform 
         } sm:translate-x-0 transition-transform`}
       >
         <div className="text-center p-6 text-2xl font-bold border-b border-gray-200">

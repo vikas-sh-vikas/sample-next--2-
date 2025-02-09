@@ -18,7 +18,7 @@ function Header() {
   const router = useRouter();
 
   const onHandleAdd = () => {
-    const drawerWidth = "20%";
+    const drawerWidth = "16rem";
     onShowDrawer({
       dimmer: true,
       width: drawerWidth,

@@ -38,7 +38,7 @@ const useUser = (): UserState => {
     try {
       const requestPayload = {
         data: {
-          id: 35,
+          id: 36,
         },
       };
       const response = await post(GetSpecificUserMasterData, requestPayload);

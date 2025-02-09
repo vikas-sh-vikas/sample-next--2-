@@ -183,122 +183,127 @@ const ProductForm = (
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full mx-auto p-6 bg-white"
+      className="h-full flex flex-col justify-between w-full mx-auto p-6 bg-white"
     >
       {/* Submit Section */}
+
+      <div>
+        <h2 className="text-2xl font-bold mb-6 text-center">Product Details</h2>
+        <hr className="mb-5"></hr>
+        <div>
+          {isLoading ? (
+            <Loader size={"35"} className="text-indigo-600" />
+          ) : (
+            <div>
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <FormInput
+                    type="text"
+                    label="Product Name"
+                    error={errors.productName?.message}
+                    isRequired={true}
+                    length={"full"}
+                    name="productName"
+                    register={register}
+                    placeholder="Enter Product Name"
+                  />
+                </div>
+                <div>
+                  <FormDropdown
+                    isRequired={true}
+                    label="Group"
+                    name="group"
+                    error={errors.group?.value?.message}
+                    placeholder="Select Group"
+                    options={groupOptions}
+                    value={formValues.unit?.value}
+                    onChange={(selected: any) => {
+                      setValue("group.value", selected.value, {
+                        shouldValidate: true,
+                      });
+                      setValue("group.label", selected.label, {
+                        shouldValidate: true,
+                      });
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 mt-6">
+                <div>
+                  <FormDropdown
+                    isRequired={true}
+                    label="Unit"
+                    name="unit"
+                    value={formValues.unit?.value}
+                    error={errors.unit?.value?.message}
+                    placeholder="Select Unit"
+                    options={unitOptions}
+                    onChange={(selected: any) => {
+                      setValue("unit.value", selected.value, {
+                        shouldValidate: true,
+                      });
+                      setValue("unit.label", selected.label, {
+                        shouldValidate: true,
+                      });
+                    }}
+                  />
+                </div>
+                <div>
+                  <FormInput
+                    type="text"
+                    label="Description"
+                    error={errors.description?.message}
+                    isRequired={true}
+                    name="description"
+                    register={register}
+                    length={"full"}
+                    placeholder="Enter Description"
+                  />
+                </div>
+              </div>
+
+              {/* GST Details Section */}
+              {/* <h3 className="text-xl font-semibold mt-6 mb-4">GST Details</h3> */}
+              <div className="grid grid-cols-2 gap-6 mt-6">
+                <div>
+                  <FormInput
+                    type="text"
+                    label="HSN Code"
+                    length={"full"}
+                    error={errors.hsnCode?.message}
+                    isRequired={true}
+                    name="hsnCode"
+                    register={register}
+                    placeholder="Enter HSN Code"
+                  />
+                </div>
+                <div>
+                  <FormInput
+                    type="number"
+                    label="Price"
+                    length={"full"}
+                    error={errors.price?.message}
+                    isRequired={true}
+                    name="price"
+                    register={register}
+                    placeholder="Enter IGST"
+                  />
+                </div>
+              </div>
+            </div>
+          )}{" "}
+        </div>
+      </div>
+      <div>
       <div className="flex space-x-4 justify-end py-4">
         <Button disabled={isLoading} type="submit" variant="blue">
           Submit
         </Button>
         <Button variant="grey" onClick={onCloseDrawer}>
           Cancel
-        </Button>
+        </Button> 
       </div>
-      <h2 className="text-2xl font-bold mb-6 text-center">Product Details</h2>
-      <hr className="mb-5"></hr>
-      <div className="h-screen">
-        {isLoading ? (
-          <Loader size={"35"} className="text-indigo-600" />
-        ) : (
-          <div>
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <FormInput
-                  type="text"
-                  label="Product Name"
-                  error={errors.productName?.message}
-                  isRequired={true}
-                  length={"full"}
-                  name="productName"
-                  register={register}
-                  placeholder="Enter Product Name"
-                />
-              </div>
-              <div>
-                <FormDropdown
-                  isRequired={true}
-                  label="Group"
-                  name="group"
-                  error={errors.group?.value?.message}
-                  placeholder="Select Group"
-                  options={groupOptions}
-                  value={formValues.unit?.value}
-                  onChange={(selected: any) => {
-                    setValue("group.value", selected.value, {
-                      shouldValidate: true,
-                    });
-                    setValue("group.label", selected.label, {
-                      shouldValidate: true,
-                    });
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6 mt-6">
-              <div>
-                <FormDropdown
-                  isRequired={true}
-                  label="Unit"
-                  name="unit"
-                  value={formValues.unit?.value}
-                  error={errors.unit?.value?.message}
-                  placeholder="Select Unit"
-                  options={unitOptions}
-                  onChange={(selected: any) => {
-                    setValue("unit.value", selected.value, {
-                      shouldValidate: true,
-                    });
-                    setValue("unit.label", selected.label, {
-                      shouldValidate: true,
-                    });
-                  }}
-                />
-              </div>
-              <div>
-                <FormInput
-                  type="text"
-                  label="Description"
-                  error={errors.description?.message}
-                  isRequired={true}
-                  name="description"
-                  register={register}
-                  length={"full"}
-                  placeholder="Enter Description"
-                />
-              </div>
-            </div>
-
-            {/* GST Details Section */}
-            {/* <h3 className="text-xl font-semibold mt-6 mb-4">GST Details</h3> */}
-            <div className="grid grid-cols-2 gap-6 mt-6">
-              <div>
-                <FormInput
-                  type="text"
-                  label="HSN Code"
-                  length={"full"}
-                  error={errors.hsnCode?.message}
-                  isRequired={true}
-                  name="hsnCode"
-                  register={register}
-                  placeholder="Enter HSN Code"
-                />
-              </div>
-              <div>
-                <FormInput
-                  type="number"
-                  label="Price"
-                  length={"full"}
-                  error={errors.price?.message}
-                  isRequired={true}
-                  name="price"
-                  register={register}
-                  placeholder="Enter IGST"
-                />
-              </div>
-            </div>
-          </div>
-        )}{" "}
       </div>
     </form>
   );
