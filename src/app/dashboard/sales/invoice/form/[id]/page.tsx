@@ -50,10 +50,20 @@ const InvoiceForm = ({ params }: any) => {
     shipTo: {
       value: "",
       label: "",
+      state: "",
+      address: "",
+      pincode: "",
+      gstnNo: "",
+      mobile: "",
     },
     billTo: {
       value: "",
       label: "",
+      state: "",
+      address: "",
+      pincode: "",
+      gstnNo: "",
+      mobile: "",
     },
     itemArray: [
       {
@@ -102,13 +112,16 @@ const InvoiceForm = ({ params }: any) => {
   };
 
   useEffect(() => {
-    GetCustomerOptionList();
-    GetGetItemOptionList();
-    GetUnitOptionList();
-    GetGstOptionList();
-    if (id > 0) {
-      fetchSpecificData(id);
+    const fetchData = async () => {
+      await GetCustomerOptionList();
+      GetGetItemOptionList();
+      GetUnitOptionList();
+      GetGstOptionList();
+      if (id > 0) {
+         fetchSpecificData(id);
+      }
     }
+    fetchData();
   }, []);
   const fetchSpecificData = async (id: number) => {
     try {
@@ -132,9 +145,10 @@ const InvoiceForm = ({ params }: any) => {
 
         reset({
           ...formData,
-          billTo: {
-            value: formData.billToId.toString(), // Override country.value specifically
-          },
+          // billTo: {
+          //   value: formData.billToId.toString(), // Override country.value specifically
+          // },
+          billTo: options?.customerOptions.find((option) => option.value === formData.billToId.toString()),
           shipTo: {
             value: formData.shipToId.toString(), // Override country.value specifically
           },
@@ -166,6 +180,7 @@ const InvoiceForm = ({ params }: any) => {
       // setIsLoading(false);
     }
   };
+
   const GetCustomerOptionList = async () => {
     setIsLoading(true);
     try {
@@ -193,6 +208,11 @@ const InvoiceForm = ({ params }: any) => {
           .map((item: any) => ({
             label: item.companyName,
             value: item.id.toString(), // Convert id to string
+            state: item.stateId.toString(),
+            address: item.address,
+            pincode: item.pincode,
+            gstnNo: item.gstinNo,
+            // mobile:item.,
           }));
 
         setOptions((precData: any) => ({
@@ -424,7 +444,8 @@ const InvoiceForm = ({ params }: any) => {
     // Add logic to calculate total from items, labor, and freight charges
   };
   console.log("Item", formValues);
-
+  console.log("objectForm---->",formValues)
+  console.log("objectOptions",options)
   const onSubmit: SubmitHandler<SaleFormModel> = async (
     values: SaleFormModel
   ) => {
@@ -531,8 +552,9 @@ const InvoiceForm = ({ params }: any) => {
       </div>
 
       <div className="grid grid-cols-2 gap-6 mt-6">
-        <div>
+        <div className="grid grid-cols-1">
           <FormDropdown
+            className="pb-2"
             isRequired={true}
             label={"Bill To"}
             name="billTo"
@@ -541,19 +563,21 @@ const InvoiceForm = ({ params }: any) => {
             options={options?.customerOptions}
             value={formValues.billTo?.value}
             onChange={(selected: any) => {
-              setValue(`billTo.value`, selected.value, {
-                shouldValidate: true,
-              });
-              setValue(`billTo.label`, selected.label, {
-                shouldValidate: true,
-              });
+              setValue("billTo", selected, { shouldValidate: true });
             }}
-            className="large"
+
+            // className="large"
           ></FormDropdown>
+          <p>State - {formValues.billTo?.state ?? ""}</p>
+          <p>Address - {formValues.billTo?.address ?? ""}</p>
+          <p>GSTN No. - {formValues.billTo?.gstnNo ?? ""}</p>
+          <p>Pincode - {formValues.billTo?.pincode ?? ""}</p>
+          <p>Mobile - {formValues.billTo?.mobile ?? ""}</p>
         </div>
-        <div>
+        <div className="grid grid-cols-1">
           <FormDropdown
             isRequired={true}
+            className="pb-2"
             label={"Ship To"}
             name="shipTo"
             placeholder="Type Here To Search"
@@ -561,14 +585,16 @@ const InvoiceForm = ({ params }: any) => {
             error={errors.shipTo?.value?.message}
             value={formValues.shipTo?.value}
             onChange={(selected: any) => {
-              setValue(`shipTo.value`, selected.value, {
-                shouldValidate: true,
-              });
-              setValue(`shipTo.label`, selected.label, {
+              setValue(`shipTo`, selected, {
                 shouldValidate: true,
               });
             }}
           ></FormDropdown>
+          <p>State - {formValues.shipTo.state ?? ""}</p>
+          <p>Address - {formValues.shipTo.address ?? ""}</p>
+          <p>GSTN No. - {formValues.shipTo.gstnNo ?? ""}</p>
+          <p>Pincode - {formValues.shipTo.pincode ?? ""}</p>
+          <p>Mobile - {formValues.shipTo.mobile ?? ""}</p>
         </div>
       </div>
       <div className="mt-6">
@@ -1114,6 +1140,60 @@ const InvoiceForm = ({ params }: any) => {
             register={register}
           ></FormInput>
         </div>
+      </div>
+      <div className="grid grid-cols-2 gap-6">
+        <FormDropdown
+          // isRequired={true}
+          label="Bank"
+          className="border-none shadow-none z-50"
+          name={`bankName`}
+          placeholder="bank"
+          options={options?.unitOptions}
+          // error={errors.itemArray?.[index]?.unit?.value?.message} // Improved error handling for each index
+          // value={formValues.itemArray?.[index]?.unit?.value}
+          // onChange={(selected: any) => {
+          //   setValue(
+          //     `itemArray.${index}.unit.value`,
+          //     selected.value,
+          //     {
+          //       shouldValidate: true,
+          //     }
+          //   );
+          //   setValue(
+          //     `itemArray.${index}.unit.label`,
+          //     selected.label,
+          //     {
+          //       shouldValidate: true,
+          //     }
+          //   );
+          // }}
+        ></FormDropdown>
+        <FormDropdown
+          // isRequired={true}
+          label="Term & Condition"
+          className="border-none shadow-none z-50"
+          name={`bankName`}
+          placeholder="term & condition"
+          options={options?.unitOptions}
+          // error={errors.itemArray?.[index]?.unit?.value?.message} // Improved error handling for each index
+          // value={formValues.itemArray?.[index]?.unit?.value}
+          // onChange={(selected: any) => {
+          //   setValue(
+          //     `itemArray.${index}.unit.value`,
+          //     selected.value,
+          //     {
+          //       shouldValidate: true,
+          //     }
+          //   );
+          //   setValue(
+          //     `itemArray.${index}.unit.label`,
+          //     selected.label,
+          //     {
+          //       shouldValidate: true,
+          //     }
+          //   );
+          // }}
+        ></FormDropdown>
       </div>
 
       <div className="mt-6 flex space-x-4">

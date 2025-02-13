@@ -30,11 +30,20 @@ interface GSTDropDownOption {
   value: string;
   percentage: string;
 }
+interface DropDownCustomerOption {
+  label: string;
+  value: string;
+  state?:string;
+  address?:string;
+  pincode?:string;
+  gstnNo?:string;
+  mobile?:string;
+}
 type SaleFormModel = {
   invoiceNumber: string;
   date: string;
-  shipTo: DropDownOption;
-  billTo: DropDownOption;
+  shipTo: DropDownCustomerOption;
+  billTo: DropDownCustomerOption;
   itemArray?: InvoiceItem[]; // Optional array
   labourCharges?: number | null; // Optional and can be null
   freightCharges?: number | null; // Optional and can be null
