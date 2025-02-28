@@ -49,6 +49,8 @@ type SaleFormModel = {
   freightCharges?: number | null; // Optional and can be null
   subTotal?: number | null; // Optional and can be null
   gst: GSTDropDownOption; // Ensure that gst is either a valid DropDownOption or null
+  bank?: DropDownOption; // Ensure that gst is either a valid DropDownOption or null
+  terms?: DropDownOption; // Ensure that gst is either a valid DropDownOption or null
   total: number | null;
   taxAmount?: number | null;
   totalAmount?: number | null;

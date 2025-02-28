@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -8,6 +8,13 @@ import { FormInput } from "@/components/ui/form/form-input";
 import { Button } from "@/components/ui/button/button";
 import useDrawer from "@/hooks/useDrawer";
 import { FormDropdown } from "@/components/ui/form/form-dropdown";
+import PickDate from "@/components/ui/date-picker/date-picker";
+import useFetch from "@/hooks/useFetch";
+import { eResultCode } from "@/utils/enum";
+import { AddEditReceipt, GetInvoiceList, GetSpecificReceiptMasterData, GetUserBankList } from "@/utils/api.constant";
+import useToast from "@/hooks/useToast";
+import { ToastOpen, ToastType } from "@/state/toast/slice";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 export type DrawerProps = {
   isOpen?: any;
@@ -22,11 +29,23 @@ const ReceiptVoucherForm = (
     onRefreshList: RefreshListFunction;
   }
 ) => {
+  const { post } = useFetch();
+  const [billOptions,setBillOptions] = useState([]);
+  const [bankOptions,setBankOptions] = useState([]);
+  const [modeOfPaymentOptions,setModeOfPaymentOptions] = useState([
+    {label:"Cash",
+      value:"1"
+    },
+    {label:"Bank",
+      value:"1"
+    },
+  ]);
+  const {onShowToast} =useToast();
   const { onCloseDrawer } = useDrawer();
   const defaultValues = {
     voucherNo: "",
     date: "",
-    bankCashName: {
+    bankDetail: {
       value: "",
       label: "",
     },
@@ -35,19 +54,16 @@ const ReceiptVoucherForm = (
       value: "",
       label: "",
     },
-    billNo: "",
-    description: "",
-  };
-  const bankOptions = [
-    {
+    billDetail: {
       value: "",
       label: "",
     },
-  ];
+    description: "",
+  };
   const validationSchema = yup.object({
     voucherNo: yup.string().required("Voucher No. is required"),
     date: yup.string().required("Date is required"),
-    bankCashName: yup.object().shape({
+    bankDetail: yup.object().shape({
       label: yup.string().required("Bank required"),
       value: yup.string().required("Bank required"),
     }),
@@ -60,7 +76,10 @@ const ReceiptVoucherForm = (
       label: yup.string().required("Mode required"),
       value: yup.string().required("Mode required"),
     }),
-    billNo: yup.string().required("Bill No. is required"),
+    billDetail: yup.object().shape({
+      label: yup.string().required("Bill required"),
+      value: yup.string().required("BIll required"),
+    }),
     description: yup.string().required("Description is required"),
   });
 
@@ -69,6 +88,7 @@ const ReceiptVoucherForm = (
     handleSubmit,
     getValues,
     setValue,
+    reset,
     formState: { errors },
   } = useForm({
     mode: "all",
@@ -76,141 +96,359 @@ const ReceiptVoucherForm = (
     resolver: yupResolver(validationSchema),
   });
   const formValues = getValues();
+  useEffect(() => {
+    getInvoiceList(1, "", 10);
+    getBankList(1, "", 10);
+    if(props.id){
+      getSpecificDat(props.id)
+    }
+  }, []);
 
+
+  const getInvoiceList = async (
+    currentPage: number,
+    searchText: string,
+    pageSize: number
+  ) => {
+    // setIsLoading(true);
+    try {
+      const payload = {
+        data: {
+          currentPage: currentPage,
+          searchText: searchText,
+          pageSize: pageSize,
+        },
+      };
+      const response = await post(GetInvoiceList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        const data = await response.data;
+        onShowToast({
+          type: ToastType.success,
+          title: <FaCheck />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+        setBillOptions(
+          data.map((item:any) => ({
+            label: item.invoiceNumber + ` (${item.billToName})`,
+            value: item.id,
+          }))
+        );
+        // console.log("DtaResponce", response.data);
+        // setData(data);
+        // setFilterRowsCount(data.length); // Assuming the length is the total rows count
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      // setIsLoading(false);
+    }
+  };
+  const getBankList = async (
+    currentPage: number,
+    searchText: string,
+    pageSize: number
+  ) => {
+    // setIsLoading(true);
+    try {
+      const payload = {
+        data: {
+          currentPage: currentPage,
+          searchText: searchText,
+          pageSize: pageSize,
+        },
+      };
+      const response = await post(GetUserBankList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        const data = await response.data;
+        onShowToast({
+          type: ToastType.success,
+          title: <FaCheck />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+        setBankOptions(
+          data.map((item:any) => ({
+            label: item.bankName,
+            value: item.id,
+          }))
+        );
+        // console.log("DtaResponce", response.data);
+        // setData(data);
+        // setFilterRowsCount(data.length); // Assuming the length is the total rows count
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);``
+    } finally {
+      // setIsLoading(false);
+    }
+  };
+  const getSpecificDat = async (
+    id: number
+  ) => {
+    // setIsLoading(true);
+    try {
+      const payload = {
+        data: {
+          id: id,
+        },
+      };
+      const response = await post(GetSpecificReceiptMasterData, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        const data = await response.data;
+        onShowToast({
+          type: ToastType.success,
+          title: <FaCheck />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+        reset(...data)
+        setBankOptions(
+          data.map((item:any) => ({
+            label: item.bankName,
+            value: item.id,
+          }))
+        );
+        // console.log("DtaResponce", response.data);
+        // setData(data);
+        // setFilterRowsCount(data.length); // Assuming the length is the total rows count
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      // setIsLoading(false);
+    }
+  };
   const onSubmit: SubmitHandler<any> = async (values) => {
     console.log("Submitted values", values);
+        try {
+          const payload = {
+            data: {
+              date: new Date(values.date),
+              amount:values.amount,
+              description: values.description,
+              voucherNo:values.voucherNo,
+              billId:values.billDetail.value,
+              paymentModeId: values.paymentMode.value,
+              bankId: values.bankDetail.value,
+
+            },
+          };
+          const response = await post(AddEditReceipt, payload);
+          const { dataResponse } = response;
+          const { returnCode, description } = dataResponse;
+          if (returnCode == eResultCode.SUCCESS) {
+            // setIsLoading(false);
+            onShowToast({
+              type: ToastType.success,
+              title: <FaCheck />,
+              position: ToastOpen.leftBottom,
+              content: description,
+            });
+            // router.push("/dashboard/sales/invoice");
+            // setIsAccountCreated(true);
+            onCloseDrawer();
+            reset();
+          } else {
+            onShowToast({
+              type: ToastType.error,
+              title: <FaTimes />,
+              position: ToastOpen.leftBottom,
+              content: description,
+            });
+          }
+        } catch (error) {
+          console.log(error);
+        } finally {
+          // setIsLoading(false);
+        }
   };
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full mx-auto p-6 bg-white shadow-md rounded-lg"
+      className="h-full flex flex-col justify-between w-full mx-auto p-6 bg-white"
     >
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        Receipt Voucher Details
-      </h2>
-      <hr className="mb-5"></hr>
+      <div>
+        <h2 className="text-2xl font-bold mb-6 text-center">
+          Receipt Voucher Details
+        </h2>
+        <hr className="mb-5"></hr>
 
-      {/* Voucher Details Section */}
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <FormInput
-            type="text"
-            label="Voucher No."
-            error={errors.voucherNo?.message}
-            isRequired={true}
-            length={"full"}
-            name="voucherNo"
-            register={register}
-            placeholder="Enter Voucher No."
-          />
+        {/* Voucher Details Section */}
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <FormInput
+              type="text"
+              label="Voucher No."
+              error={errors.voucherNo?.message}
+              isRequired={true}
+              length={"full"}
+              name="voucherNo"
+              register={register}
+              placeholder="Enter Voucher No."
+            />
+          </div>
+          <div>
+            {/* <FormInput
+              type="date"
+              label="Date"
+              error={errors.date?.message}
+              isRequired={true}
+              length={"full"}
+              name="date"
+              register={register}
+            /> */}
+            <PickDate
+              dateFormat="dd-MMM-yyyy"
+              placeholderText={"SelectToDate"}
+              maxDate={new Date()}
+              name="invoiceDate"
+              error={errors.date?.message}
+              label={"Invoice Date"}
+              selected={formValues.date}
+              onChange={(selected: any) => {
+                setValue(`date`, selected, {
+                  shouldValidate: true,
+                });
+              }}
+            />
+          </div>
         </div>
-        <div>
-          <FormInput
-            type="date"
-            label="Date"
-            error={errors.date?.message}
-            isRequired={true}
-            length={"full"}
-            name="date"
-            register={register}
-          />
+
+        <div className="grid grid-cols-2 gap-6 mt-6">
+          <div>
+            <FormDropdown
+              isRequired={true}
+              label={"Bill Ref."}
+              name="billId"
+              error={errors.billDetail?.value?.message}
+              placeholder="Type Here To Search"
+              options={billOptions}
+              value={formValues.billDetail.value}
+              onChange={(selected: any) => {
+                setValue(`billDetail.value`, selected.value, {
+                  shouldValidate: true,
+                });
+                setValue(`billDetail.label`, selected.label, {
+                  shouldValidate: true,
+                });
+              }}
+              className="large"
+            ></FormDropdown>
+          </div>
+          <div>
+            <FormDropdown
+              isRequired={true}
+              label={"Payment Mode"}
+              name="paymentMode"
+              error={errors.paymentMode?.value?.message}
+              placeholder="Type Here To Search"
+              options={modeOfPaymentOptions}
+              value={formValues.paymentMode.value}
+              onChange={(selected: any) => {
+                setValue(`paymentMode.value`, selected.value, {
+                  shouldValidate: true,
+                });
+                setValue(`paymentMode.label`, selected.label, {
+                  shouldValidate: true,
+                });
+              }}
+              className="large"
+            ></FormDropdown>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6 mt-6">
+          <div>
+            <FormDropdown
+              isRequired={true}
+              label={"Bank Name"}
+              name="bankCashName"
+              error={errors.bankDetail?.value?.message}
+              placeholder="Type Here To Search"
+              options={bankOptions}
+              value={formValues.bankDetail.label}
+              onChange={(selected: any) => {
+                setValue(`bankDetail.value`, selected.value, {
+                  shouldValidate: true,
+                });
+                setValue(`bankDetail.label`, selected.label, {
+                  shouldValidate: true,
+                });
+              }}
+              className="large"
+            ></FormDropdown>
+          </div>
+          <div>
+            <FormInput
+              type="number"
+              label="Amount"
+              error={errors.amount?.message}
+              isRequired={true}
+              length={"full"}
+              name="amount"
+              register={register}
+              placeholder="Enter Amount"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 mt-6">
+          <div>
+            <FormInput
+              type="text"
+              label="Description"
+              error={errors.description?.message}
+              isRequired={true}
+              length={"full"}
+              name="description"
+              register={register}
+              placeholder="Enter Description"
+            />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-6 mt-6">
-        <div>
-          <FormInput
-            type="text"
-            label="Bill No."
-            error={errors.billNo?.message}
-            isRequired={true}
-            length={"full"}
-            name="billNo"
-            register={register}
-            placeholder="Enter Bill No."
-          />
+      <div>
+        <div className="flex space-x-4 justify-end py-4">
+          <Button type="submit" variant="blue">
+            Submit
+          </Button>
+          <Button variant="grey" onClick={onCloseDrawer}>
+            Cancel
+          </Button>
         </div>
-        <div>
-          <FormDropdown
-            isRequired={true}
-            label={"Bank Name"}
-            name="bankCashName"
-            error={errors.bankCashName?.value?.message}
-            placeholder="Type Here To Search"
-            options={bankOptions}
-            value={formValues.bankCashName.label}
-            onChange={(selected: any) => {
-              setValue(`bankCashName.value`, selected.value, {
-                shouldValidate: true,
-              });
-              setValue(`bankCashName.label`, selected.label, {
-                shouldValidate: true,
-              });
-            }}
-            className="large"
-          ></FormDropdown>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6 mt-6">
-        <div>
-          <FormInput
-            type="number"
-            label="Amount"
-            error={errors.amount?.message}
-            isRequired={true}
-            length={"full"}
-            name="amount"
-            register={register}
-            placeholder="Enter Amount"
-          />
-        </div>
-        <div>
-          <FormDropdown
-            isRequired={true}
-            label={"Payment Mode"}
-            name="paymentMode"
-            error={errors.paymentMode?.value?.message}
-            placeholder="Type Here To Search"
-            options={bankOptions}
-            value={formValues.paymentMode.label}
-            onChange={(selected: any) => {
-              setValue(`paymentMode.value`, selected.value, {
-                shouldValidate: true,
-              });
-              setValue(`paymentMode.label`, selected.label, {
-                shouldValidate: true,
-              });
-            }}
-            className="large"
-          ></FormDropdown>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 mt-6">
-        <div>
-          <FormInput
-            type="text"
-            label="Description"
-            error={errors.description?.message}
-            isRequired={true}
-            length={"full"}
-            name="description"
-            register={register}
-            placeholder="Enter Description"
-          />
-        </div>
-      </div>
-
-      {/* Submit Section */}
-      <div className="mt-6 flex space-x-4">
-        <Button type="submit" variant="blue">
-          Submit
-        </Button>
-        <Button variant="grey" onClick={onCloseDrawer}>
-          Cancel
-        </Button>
       </div>
     </form>
   );

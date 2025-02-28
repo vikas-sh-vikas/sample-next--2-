@@ -14,35 +14,32 @@ import {
   TableBody,
 } from "@/components/ui/table/table";
 import useDrawer from "@/hooks/useDrawer";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { FaCheck, FaEdit, FaPlus, FaRegFileAlt, FaTimes } from "react-icons/fa";
 import { DrawerOpen } from "@/state/drawer/slice";
-import ReceiptVoucherForm from "./form/receiptVoucherForm";
-import { GetReceiptList } from "@/utils/api.constant";
+import useFetch from "@/hooks/useFetch";
+import {
+  GetGstList,
+  GetItemsList,
+  GetUserBankList,
+} from "@/utils/api.constant";
+import useToast from "@/hooks/useToast";
 import { eResultCode } from "@/utils/enum";
 import { ToastOpen, ToastType } from "@/state/toast/slice";
-import useToast from "@/hooks/useToast";
-import useFetch from "@/hooks/useFetch";
-
-type TReceiptModal = {
-  id: number;
-  voucherNo: string;
-  date: string;
-  description: string;
-};
+import GstForm from "./form/gstForm";
 
 function Page() {
-  const {onShowToast}=useToast()
   const router = useRouter();
-  const {post} = useFetch()
+  const { post } = useFetch();
+  const { onShowToast } = useToast();
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterRowsCount, setFilterRowsCount] = useState(0);
   const [searchText, setSearchText] = useState("");
-  const [data, setData] = useState<TReceiptModal[]>([]); // State to store the data
+  const [data, setData] = useState<GSTListModel[]>([]); // State to store the data
   const { onShowDrawer } = useDrawer();
   const fetchData = async (
     currentPage: number,
@@ -58,21 +55,20 @@ function Page() {
           pageSize: pageSize,
         },
       };
-      const response = await post(GetReceiptList, payload);
+      const response = await post(GetGstList, payload);
       const { dataResponse } = response;
       const { returnCode, description } = dataResponse;
       if (returnCode == eResultCode.SUCCESS) {
         // setIsLoading(false);
-        const data = await response.data;
         onShowToast({
           type: ToastType.success,
           title: <FaCheck />,
           position: ToastOpen.leftBottom,
           content: description,
         });
-        // console.log("DtaResponce", response.data);
-        setData(data);
-        setFilterRowsCount(data.length); // Assuming the length is the total rows count
+        setData(response.data);
+        setFilterRowsCount(response.Data.length); // Assuming the length is the total rows count
+        // setIsLoading(false);
       } else {
         onShowToast({
           type: ToastType.error,
@@ -97,12 +93,13 @@ function Page() {
     ? "100%" 
     : window.innerWidth <= 1024 
       ? "60%" 
-      : "45%";    onShowDrawer({
+      : "45%";
+          onShowDrawer({
       dimmer: true,
       width: drawerWidth,
       name: "Show Drawer Form",
       Component: () => (
-        <ReceiptVoucherForm
+        <GstForm
           id={id}
           onRefreshList={() => {
             OnRefreshList();
@@ -111,6 +108,20 @@ function Page() {
       ),
       position: DrawerOpen.right,
     });
+  };
+  const handleSearch = (searchText: string) => {
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set("search", searchText.toString());
+    newUrl.searchParams.set("currentPage", currentPage.toString());
+    window.history.pushState({}, "", newUrl.toString());
+    setCurrentPage(1);
+    setSearchText(searchText);
+  };
+  const handleResetFilters = () => {
+    setCurrentPage(1);
+    setSearchText("");
+    setPageSize(10);
+    router.push(pathname);
   };
   const OnRefreshList = () => {
     const urlparams = new URLSearchParams(location.search);
@@ -134,33 +145,20 @@ function Page() {
       );
     else fetchData(currentPage, searchText, pageSize);
   };
-  const handleSearch = (searchText: string) => {
-    const newUrl = new URL(window.location.href);
-    newUrl.searchParams.set("search", searchText.toString());
-    newUrl.searchParams.set("currentPage", currentPage.toString());
-    window.history.pushState({}, "", newUrl.toString());
-    setCurrentPage(1);
-    setSearchText(searchText);
-  };
-  const handleResetFilters = () => {
-    setCurrentPage(1);
-    setSearchText("");
-    setPageSize(10);
-    router.push(pathname);
-  };
-
   const handleAdd = (id: number) => {
-    console.log("Id in List", id);
-    const drawerWidth = "45%";
-    onShowDrawer({
+    const drawerWidth = window.innerWidth <= 640 
+    ? "100%" 
+    : window.innerWidth <= 1024 
+      ? "60%" 
+      : "45%";    onShowDrawer({
       dimmer: true,
       width: drawerWidth,
       name: "Show Drawer Form",
       Component: () => (
-        <ReceiptVoucherForm
+        <GstForm
           id={id}
           onRefreshList={() => {
-            console.log("object");
+            OnRefreshList();
           }}
         />
       ),
@@ -190,10 +188,9 @@ function Page() {
           <TableColumn classNames="indexColumn">
             {index + 1 + (currentPage - 1) * pageSize}
           </TableColumn>
-          <TableColumn variant="leftAlign">{item.voucherNo}</TableColumn>
-          <TableColumn variant="leftAlign">{item.date}</TableColumn>
-          <TableColumn variant="leftAlign">{item.description}</TableColumn>
-          {/* <TableColumn variant="leftAlign">{item.contactDetail}</TableColumn> */}
+          <TableColumn variant="leftAlign">{item.gstName}</TableColumn>
+          <TableColumn variant="leftAlign">{item.shortCode}</TableColumn>
+          <TableColumn variant="leftAlign">{item.percentage}</TableColumn>
           <TableColumn classNames="actionColumn">
             <FaEdit onClick={() => handleEdit(item.id)} />
           </TableColumn>
@@ -204,7 +201,7 @@ function Page() {
 
   return (
     <div className="border-4 ">
-      <PageHeader icon={<FaRegFileAlt />} title={"Receipt"} size="large">
+      <PageHeader icon={<FaRegFileAlt />} title={"GST"} size="large">
         <Search
           searchText={searchText}
           onInputChange={(e: any) => handleSearch(e)}
@@ -216,16 +213,16 @@ function Page() {
           <TableHead>
             <TableRow>
               <TableHeadCell classNames="indexColumn">
-                {"SerialNo"}
+                {"Sr. No."}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"Voucher No."}
+                {"Gst Name"}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"Date"}
+                {"Short Code"}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"Description"}
+                {"Percentage"}
               </TableHeadCell>
               <TableHeadCell classNames="Theader">
                 <FaPlus onClick={() => handleAdd(0)} />

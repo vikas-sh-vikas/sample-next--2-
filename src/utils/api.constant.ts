@@ -31,3 +31,9 @@ export const AddEditInvoice = "/api/Invoice/AddEditInvoice";
 export const GetInvoiceList = "/api/Invoice/GetInvoiceList";
 export const GetSpecificInvoiceMasterData =
   "/api/Invoice/GetSpecificInvoiceMasterData";
+export const AddEditReceipt =
+  "/api/Invoice/AddEditReceipt";
+export const GetReceiptList =
+  "/api/Invoice/GetReceiptList";
+export const GetSpecificReceiptMasterData =
+  "/api/Invoice/GetSpecificReceiptMasterData";

@@ -20,6 +20,7 @@ import {
   GetItemsList,
   GetSpecificInvoiceMasterData,
   GetUnitsList,
+  GetUserBankList,
 } from "@/utils/api.constant";
 import { eResultCode } from "@/utils/enum";
 import useToast from "@/hooks/useToast";
@@ -33,6 +34,8 @@ type OptionsSet = {
   itemOptions: DropDownOption[];
   unitOptions: DropDownOption[];
   gstOptions: GSTDropDownOption[];
+  bankOptions: DropDownOption[];
+  termOptions: DropDownOption[];
 };
 
 const InvoiceForm = ({ params }: any) => {
@@ -86,6 +89,14 @@ const InvoiceForm = ({ params }: any) => {
       label: "",
       percentage: "",
     },
+    bank: {
+      value: "",
+      label: "",
+    },
+    terms: {
+      value: "",
+      label: "",
+    },
     subTotal: null,
     labourCharges: null,
     freightCharges: null,
@@ -113,7 +124,8 @@ const InvoiceForm = ({ params }: any) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      await GetCustomerOptionList();
+      GetCustomerOptionList();
+      GetBankOptions();
       GetGetItemOptionList();
       GetUnitOptionList();
       GetGstOptionList();
@@ -148,8 +160,9 @@ const InvoiceForm = ({ params }: any) => {
           // billTo: {
           //   value: formData.billToId.toString(), // Override country.value specifically
           // },
-          billTo: options?.customerOptions.find((option) => option.value === formData.billToId.toString()),
-          shipTo: {
+          billTo: {
+            value: formData.billToId.toString(), // Override country.value specifically
+          },          shipTo: {
             value: formData.shipToId.toString(), // Override country.value specifically
           },
           gst: {
@@ -218,6 +231,53 @@ const InvoiceForm = ({ params }: any) => {
         setOptions((precData: any) => ({
           ...precData,
           customerOptions: customerOptions,
+        }));
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const GetBankOptions = async () => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        data: {
+          currentPage: 1,
+          searchText: "",
+          pageSize: 10,
+        },
+      };
+      const response = await post(GetUserBankList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        // onShowToast({
+        //   type: ToastType.success,
+        //   title: <FaCheck />,
+        //   position: ToastOpen.leftBottom,
+        //   content: description,
+        // });
+        const Data = await response.data;
+
+        const bankOption = Data // Filter items with groupId = 1
+          .map((item: any) => ({
+            label: item.bankName,
+            value: item.id.toString(), // Convert id to string            // mobile:item.,
+          }));
+
+        setOptions((precData: any) => ({
+          ...precData,
+          bankOptions: bankOption,
         }));
       } else {
         onShowToast({
@@ -432,7 +492,7 @@ const InvoiceForm = ({ params }: any) => {
   } = useForm<SaleFormModel>({
     mode: "all",
     defaultValues,
-    resolver: yupResolver(validationSchema),
+    // resolver: yupResolver(validationSchema),
   });
   const { fields, append, remove } = useFieldArray({
     control,
@@ -1148,25 +1208,25 @@ const InvoiceForm = ({ params }: any) => {
           className="border-none shadow-none z-50"
           name={`bankName`}
           placeholder="bank"
-          options={options?.unitOptions}
+          options={options?.bankOptions}
           // error={errors.itemArray?.[index]?.unit?.value?.message} // Improved error handling for each index
-          // value={formValues.itemArray?.[index]?.unit?.value}
-          // onChange={(selected: any) => {
-          //   setValue(
-          //     `itemArray.${index}.unit.value`,
-          //     selected.value,
-          //     {
-          //       shouldValidate: true,
-          //     }
-          //   );
-          //   setValue(
-          //     `itemArray.${index}.unit.label`,
-          //     selected.label,
-          //     {
-          //       shouldValidate: true,
-          //     }
-          //   );
-          // }}
+          value={formValues.bank?.value}
+          onChange={(selected: any) => {
+            setValue(
+              `bank.value`,
+              selected.value,
+              {
+                shouldValidate: true,
+              }
+            );
+            setValue(
+              `bank.label`,
+              selected.label,
+              {
+                shouldValidate: true,
+              }
+            );
+          }}
         ></FormDropdown>
         <FormDropdown
           // isRequired={true}
@@ -1174,25 +1234,25 @@ const InvoiceForm = ({ params }: any) => {
           className="border-none shadow-none z-50"
           name={`bankName`}
           placeholder="term & condition"
-          options={options?.unitOptions}
+          options={options?.termOptions}
           // error={errors.itemArray?.[index]?.unit?.value?.message} // Improved error handling for each index
-          // value={formValues.itemArray?.[index]?.unit?.value}
-          // onChange={(selected: any) => {
-          //   setValue(
-          //     `itemArray.${index}.unit.value`,
-          //     selected.value,
-          //     {
-          //       shouldValidate: true,
-          //     }
-          //   );
-          //   setValue(
-          //     `itemArray.${index}.unit.label`,
-          //     selected.label,
-          //     {
-          //       shouldValidate: true,
-          //     }
-          //   );
-          // }}
+          value={formValues.terms?.value}
+          onChange={(selected: any) => {
+            setValue(
+              `terms.value`,
+              selected.value,
+              {
+                shouldValidate: true,
+              }
+            );
+            setValue(
+              `terms.label`,
+              selected.label,
+              {
+                shouldValidate: true,
+              }
+            );
+          }}
         ></FormDropdown>
       </div>
 
