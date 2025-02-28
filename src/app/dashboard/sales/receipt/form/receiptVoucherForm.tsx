@@ -34,10 +34,10 @@ const ReceiptVoucherForm = (
   const [bankOptions,setBankOptions] = useState([]);
   const [modeOfPaymentOptions,setModeOfPaymentOptions] = useState([
     {label:"Cash",
-      value:"1"
+      value:1
     },
     {label:"Bank",
-      value:"1"
+      value:2
     },
   ]);
   const {onShowToast} =useToast();
@@ -97,11 +97,14 @@ const ReceiptVoucherForm = (
   });
   const formValues = getValues();
   useEffect(() => {
-    getInvoiceList(1, "", 10);
-    getBankList(1, "", 10);
-    if(props.id){
-      getSpecificDat(props.id)
+    const fetchData = async () => {
+      await getInvoiceList(1, "", 10);
+      await getBankList(1, "", 10);
+      if(props.id){
+        await getSpecificData(props.id)
+      }
     }
+    fetchData();
   }, []);
 
 
@@ -203,7 +206,7 @@ const ReceiptVoucherForm = (
       // setIsLoading(false);
     }
   };
-  const getSpecificDat = async (
+  const getSpecificData = async (
     id: number
   ) => {
     // setIsLoading(true);
@@ -225,7 +228,16 @@ const ReceiptVoucherForm = (
           position: ToastOpen.leftBottom,
           content: description,
         });
-        reset(...data)
+        console.log("Data-------->",data)
+        reset({
+          date: data.date,
+          voucherNo: data.voucherNo,
+          amount: data.amount,
+          description: data.description,
+          billDetail: {  value: data.billId }, // Correctly
+          paymentMode: {  value: data.paymentModeId }, // Correctly
+          bankDetail: {  value: data.bankId } // Correctly
+        });        
         setBankOptions(
           data.map((item:any) => ({
             label: item.bankName,
@@ -249,11 +261,13 @@ const ReceiptVoucherForm = (
       // setIsLoading(false);
     }
   };
+  console.log("FormValues=============>",formValues)
   const onSubmit: SubmitHandler<any> = async (values) => {
     console.log("Submitted values", values);
         try {
           const payload = {
             data: {
+              id:props.id ?? 0,
               date: new Date(values.date),
               amount:values.amount,
               description: values.description,
@@ -398,7 +412,7 @@ const ReceiptVoucherForm = (
               error={errors.bankDetail?.value?.message}
               placeholder="Type Here To Search"
               options={bankOptions}
-              value={formValues.bankDetail.label}
+              value={formValues.bankDetail.value}
               onChange={(selected: any) => {
                 setValue(`bankDetail.value`, selected.value, {
                   shouldValidate: true,
