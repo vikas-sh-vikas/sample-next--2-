@@ -13,129 +13,76 @@ import {
   TableHeadCell,
   TableBody,
 } from "@/components/ui/table/table";
+import useFetch from "@/hooks/useFetch";
+import useToast from "@/hooks/useToast";
+import { ToastOpen, ToastType } from "@/state/toast/slice";
+import { GetCompanyList, GetInvoiceList } from "@/utils/api.constant";
+import { eResultCode } from "@/utils/enum";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { FaEdit, FaPlus, FaRegFileAlt } from "react-icons/fa";
-
-type TSaleModel = {
-  id: number;
-  customerName: string;
-  gstNo: string;
-  address: string;
-  contactPerson: string;
-  contactDetail: string;
-};
+import { FaCheck, FaEdit, FaPlus, FaRegFileAlt, FaTimes } from "react-icons/fa";
 
 function Page() {
   const router = useRouter();
   const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const { post } = useFetch();
+  const { onShowToast } = useToast();
   const [filterRowsCount, setFilterRowsCount] = useState(0);
   const [searchText, setSearchText] = useState("");
-  const [data, setData] = useState<TSaleModel[]>([]); // State to store the data
+  const [type, setType] = useState("BILL");
+  const [data, setData] = useState<SaleIndexModel[]>([]); // State to store the data
 
   const fetchData = async (
     currentPage: number,
     searchText: string,
-    pageSize: number
+    pageSize: number,
+    type: string
   ) => {
     setIsLoading(true);
-
-    // Simulated API data
-    const fetchedData: TSaleModel[] = [
-      {
-        id: 1,
-        customerName: "John Doe",
-        gstNo: "27AAAPL1234C1ZV",
-        address: "123 Main Street, New York, NY 10001",
-        contactPerson: "Jane Doe",
-        contactDetail: "+1-234-567-8901",
-      },
-      {
-        id: 2,
-        customerName: "Alice Smith",
-        gstNo: "29BBAPL5678D1ZV",
-        address: "456 Elm Street, Los Angeles, CA 90001",
-        contactPerson: "Bob Smith",
-        contactDetail: "+1-345-678-9012",
-      },
-      {
-        id: 3,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 4,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 5,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 6,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 7,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 8,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 9,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 10,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-    ];
-
-    // Set the fetched data to state
-    setData(fetchedData);
-    setFilterRowsCount(fetchedData.length); // Assuming the length is the total rows count
-
-    setIsLoading(false);
+    try {
+      const payload = {
+        data: {
+          currentPage: currentPage,
+          searchText: searchText,
+          pageSize: pageSize,
+          type: type,
+        },
+      };
+      const response = await post(GetInvoiceList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        const data = await response.data;
+        onShowToast({
+          type: ToastType.success,
+          title: <FaCheck />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+        // console.log("DtaResponce", response.data);
+        setData(data);
+        setFilterRowsCount(data.length); // Assuming the length is the total rows count
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
+  console.log("FilterData", filterRowsCount, currentPage);
   useEffect(() => {
-    fetchData(currentPage, searchText, pageSize);
+    fetchData(currentPage, searchText, pageSize,type);
   }, [currentPage, pageSize, searchText]); // Re-fetch data on page change, searchText, or pageSize change
   const handleEdit = (id: number) => {
     router.push(pathname + `/form/${id}`);
@@ -162,7 +109,7 @@ function Page() {
       return (
         <TableRow>
           <TableColumn colSpan={12} variant="leftAlign">
-            <Loader />
+            <Loader size={"20"} />
           </TableColumn>
         </TableRow>
       );
@@ -180,10 +127,11 @@ function Page() {
           <TableColumn classNames="indexColumn">
             {index + 1 + (currentPage - 1) * pageSize}
           </TableColumn>
-          <TableColumn variant="leftAlign">{item.customerName}</TableColumn>
-          <TableColumn variant="leftAlign">{item.gstNo}</TableColumn>
-          <TableColumn variant="leftAlign">{item.contactPerson}</TableColumn>
-          <TableColumn variant="leftAlign">{item.contactDetail}</TableColumn>
+          <TableColumn variant="leftAlign">{item.invoiceNumber}</TableColumn>
+          <TableColumn variant="leftAlign">{item.date}</TableColumn>
+          <TableColumn variant="leftAlign">{item.billToName}</TableColumn>
+          <TableColumn variant="leftAlign">{item.taxAmount}</TableColumn>
+          <TableColumn variant="leftAlign">{item.totalAmount}</TableColumn>
           <TableColumn classNames="actionColumn">
             <FaEdit onClick={() => handleEdit(item.id)} />
           </TableColumn>
@@ -194,7 +142,7 @@ function Page() {
 
   return (
     <div className="border-4 ">
-      <PageHeader icon={<FaRegFileAlt />} title={"Purchase"} size="large">
+      <PageHeader icon={<FaRegFileAlt />} title={"Bill"} size="large">
         <Search
           searchText={searchText}
           onInputChange={(e: any) => handleSearch(e)}
@@ -205,20 +153,21 @@ function Page() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableHeadCell classNames="indexColumn">
-                {"SerialNo"}
+              <TableHeadCell classNames="indexColumn">{"Sr.No"}</TableHeadCell>
+              <TableHeadCell variant="leftAlign" classNames="Theader">
+                {"Bill No."}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"Customer Name"}
+                {"Date"}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"GST No"}
+                {"Customer"}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"Contact Person"}
+                {"Tax Amount"}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"Contact Detail"}
+                {"Total Amount"}
               </TableHeadCell>
               <TableHeadCell classNames="Theader">
                 <FaPlus onClick={handleAdd} />
@@ -237,7 +186,7 @@ function Page() {
             onPageChange={setCurrentPage}
             fetchdata={(currentPage, pageSize) => {
               setPageSize(pageSize);
-              fetchData(currentPage, searchText, pageSize);
+              fetchData(currentPage, searchText, pageSize,type);
             }}
             searchText={searchText || ""}
             itemsPerPage={pageSize}

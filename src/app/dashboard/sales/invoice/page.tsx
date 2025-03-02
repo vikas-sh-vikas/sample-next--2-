@@ -32,12 +32,14 @@ function Page() {
   const { onShowToast } = useToast();
   const [filterRowsCount, setFilterRowsCount] = useState(0);
   const [searchText, setSearchText] = useState("");
+  const [type, setType] = useState("INVOICE");
   const [data, setData] = useState<SaleIndexModel[]>([]); // State to store the data
 
   const fetchData = async (
     currentPage: number,
     searchText: string,
-    pageSize: number
+    pageSize: number,
+    type: string
   ) => {
     setIsLoading(true);
     try {
@@ -46,6 +48,7 @@ function Page() {
           currentPage: currentPage,
           searchText: searchText,
           pageSize: pageSize,
+          type: type
         },
       };
       const response = await post(GetInvoiceList, payload);
@@ -79,7 +82,7 @@ function Page() {
   };
   console.log("FilterData", filterRowsCount, currentPage);
   useEffect(() => {
-    fetchData(currentPage, searchText, pageSize);
+    fetchData(currentPage, searchText, pageSize,type);
   }, [currentPage, pageSize, searchText]); // Re-fetch data on page change, searchText, or pageSize change
   const handleEdit = (id: number) => {
     router.push(pathname + `/form/${id}`);
@@ -183,7 +186,7 @@ function Page() {
             onPageChange={setCurrentPage}
             fetchdata={(currentPage, pageSize) => {
               setPageSize(pageSize);
-              fetchData(currentPage, searchText, pageSize);
+              fetchData(currentPage, searchText, pageSize,type);
             }}
             searchText={searchText || ""}
             itemsPerPage={pageSize}

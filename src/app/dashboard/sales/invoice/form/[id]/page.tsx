@@ -523,6 +523,7 @@ const InvoiceForm = ({ params }: any) => {
           billToId: parseInt(values.billTo.value),
           shipToId: parseInt(values.shipTo.value),
           taxTypeId: parseInt(values.gst.value),
+          type: "INVOICE",
         },
       };
       const response = await post(AddEditInvoice, payload);

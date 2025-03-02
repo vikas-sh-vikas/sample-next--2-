@@ -42,12 +42,14 @@ function Page() {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterRowsCount, setFilterRowsCount] = useState(0);
   const [searchText, setSearchText] = useState("");
+  const [type, setType] = useState("RECEIPT");
   const [data, setData] = useState<TReceiptModal[]>([]); // State to store the data
   const { onShowDrawer } = useDrawer();
   const fetchData = async (
     currentPage: number,
     searchText: string,
-    pageSize: number
+    pageSize: number,
+    type: string
   ) => {
     setIsLoading(true);
     try {
@@ -56,6 +58,7 @@ function Page() {
           currentPage: currentPage,
           searchText: searchText,
           pageSize: pageSize,
+          type: type
         },
       };
       const response = await post(GetReceiptList, payload);
@@ -89,7 +92,7 @@ function Page() {
   };
 
   useEffect(() => {
-    fetchData(currentPage, searchText, pageSize);
+    fetchData(currentPage, searchText, pageSize,type);
   }, [currentPage, pageSize, searchText]); // Re-fetch data on page change, searchText, or pageSize change
   const handleEdit = (id: number) => {
     // router.push(pathname + `/form/${id}`);
@@ -105,14 +108,14 @@ function Page() {
         <ReceiptVoucherForm
           id={id}
           onRefreshList={() => {
-            OnRefreshList();
+            onRefreshList();
           }}
         />
       ),
       position: DrawerOpen.right,
     });
   };
-  const OnRefreshList = () => {
+  const onRefreshList = () => {
     const urlparams = new URLSearchParams(location.search);
     const page = urlparams.get("currentPage");
     if (page) {
@@ -130,9 +133,10 @@ function Page() {
       fetchData(
         parseInt(page ? page : "1"),
         sText ? sText : "",
-        parseInt(psize ? psize : "10")
+        parseInt(psize ? psize : "10"),
+        type
       );
-    else fetchData(currentPage, searchText, pageSize);
+    else fetchData(currentPage, searchText, pageSize,type);
   };
   const handleSearch = (searchText: string) => {
     const newUrl = new URL(window.location.href);
@@ -160,7 +164,7 @@ function Page() {
         <ReceiptVoucherForm
           id={id}
           onRefreshList={() => {
-            console.log("object");
+            onRefreshList()
           }}
         />
       ),
@@ -244,7 +248,7 @@ function Page() {
             onPageChange={setCurrentPage}
             fetchdata={(currentPage, pageSize) => {
               setPageSize(pageSize);
-              fetchData(currentPage, searchText, pageSize);
+              fetchData(currentPage, searchText, pageSize,type);
             }}
             searchText={searchText || ""}
             itemsPerPage={pageSize}

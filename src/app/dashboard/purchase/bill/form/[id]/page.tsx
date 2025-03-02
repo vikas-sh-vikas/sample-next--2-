@@ -5,76 +5,443 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { FormInput } from "@/components/ui/form/form-input";
 import { FormDropdown } from "@/components/ui/form/form-dropdown";
-import { FaPlus, FaTrash } from "react-icons/fa";
+import { FaCheck, FaPlus, FaTimes, FaTrash } from "react-icons/fa";
 import PickDate from "@/components/ui/date-picker/date-picker";
 import { Button } from "@/components/ui/button/button";
+import useDrawer from "@/hooks/useDrawer";
+import ProductForm from "@/app/dashboard/items/form/productForm";
+import { DrawerOpen } from "@/state/drawer/slice";
+import { use, useEffect, useState } from "react";
+import Loader from "@/components/ui/loader/loader";
+import {
+  AddEditInvoice,
+  GetCompanyList,
+  GetGstList,
+  GetItemsList,
+  GetSpecificInvoiceMasterData,
+  GetUnitsList,
+  GetUserBankList,
+} from "@/utils/api.constant";
+import { eResultCode } from "@/utils/enum";
+import useToast from "@/hooks/useToast";
+import { ToastOpen, ToastType } from "@/state/toast/slice";
+import useFetch from "@/hooks/useFetch";
+import { truncate } from "node:fs/promises";
+import { useRouter } from "next/navigation";
 
-const InvoiceForm = () => {
-  // const defaultValues: SaleFormModel = {
-  //   invoiceNumber: "",
-  //   invoiceDate: "",
-  //   shipTo: {
-  //     value: "",
-  //     label: "",
-  //   },
-  //   // shippingAddress: "",
-  //   billTo: {
-  //     value: "",
-  //     label: "",
-  //   },
-  //   // billingAddress: "",
-  //   itemArray: [
-  //     {
-  //       item: {
-  //         value: "",
-  //         label: "",
-  //       },
-  //       unit: {
-  //         value: "",
-  //         label: "",
-  //       },
-  //       qty: 0,
-  //       unitPrice: 0,
-  //       discount: 0,
-  //       // gst: {
-  //       //   value: "",
-  //       //   label: "",
-  //       // },
-  //       total: 0,
-  //     },
-  //   ],
-  //   laborCharges: 0,
-  //   freightCharges: 0,
-  //   total: 0,
-  // };
-  const customerOptions = [
-    {
-      value: "1",
-      label: "Label 1",
-    },
-    {
-      value: "2",
-      label: "Label 2",
-    },
-    {
-      value: "3",
-      label: "Label 3",
-    },
-  ];
+type OptionsSet = {
+  customerOptions: DropDownOption[];
+  itemOptions: DropDownOption[];
+  unitOptions: DropDownOption[];
+  gstOptions: GSTDropDownOption[];
+  bankOptions: DropDownOption[];
+  termOptions: DropDownOption[];
+};
 
+const BillForm = ({ params }: any) => {
+  const unwrappedParams: any = use(params); // Unwrap params
+  const id = unwrappedParams.id;
+  const { onShowDrawer } = useDrawer();
+  const router = useRouter();
+  const { post } = useFetch();
+  const { onShowToast } = useToast();
+  const [isLoading, setIsLoading] = useState(true);
+  const [options, setOptions] = useState<OptionsSet>();
+  const defaultValues: SaleFormModel = {
+    invoiceNumber: "",
+    date: "",
+    shipTo: {
+      value: "",
+      label: "",
+      state: "",
+      address: "",
+      pincode: "",
+      gstnNo: "",
+      mobile: "",
+    },
+    billTo: {
+      value: "",
+      label: "",
+      state: "",
+      address: "",
+      pincode: "",
+      gstnNo: "",
+      mobile: "",
+    },
+    itemArray: [
+      {
+        item: {
+          value: "",
+          label: "",
+        },
+        hsnCode: "",
+        unit: {
+          value: "",
+          label: "",
+        },
+        qty: 0,
+        unitPrice: 0,
+        total: 0, // Allows nullable number (null is acceptable here)
+      },
+    ],
+    gst: {
+      value: "",
+      label: "",
+      percentage: "",
+    },
+    bank: {
+      value: "",
+      label: "",
+    },
+    terms: {
+      value: "",
+      label: "",
+    },
+    subTotal: null,
+    labourCharges: null,
+    freightCharges: null,
+    total: null, // Nullable, as per the model and schema
+    totalAmount: null,
+    taxAmount: null,
+  };
+
+  const addProduct = () => {
+    onShowDrawer({
+      dimmer: true,
+      width: "45%",
+      name: "Show Drawer Form",
+      Component: () => (
+        <ProductForm
+          id={0}
+          onRefreshList={() => {
+            console.log("object");
+          }}
+        />
+      ),
+      position: DrawerOpen.right,
+    });
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      GetVendorOptionList();
+      GetBankOptions();
+      GetGetItemOptionList();
+      GetUnitOptionList();
+      GetGstOptionList();
+      if (id > 0) {
+         fetchSpecificData(id);
+      }
+    }
+    fetchData();
+  }, []);
+  const fetchSpecificData = async (id: number) => {
+    try {
+      const payload = {
+        data: {
+          id: id,
+        },
+      };
+      const response = await post(GetSpecificInvoiceMasterData, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        onShowToast({
+          type: ToastType.success,
+          title: <FaCheck />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+        const formData = response.data;
+
+        reset({
+          ...formData,
+          // billTo: {
+          //   value: formData.billToId.toString(), // Override country.value specifically
+          // },
+          billTo: {
+            value: formData.billToId.toString(), // Override country.value specifically
+          },          shipTo: {
+            value: formData.shipToId.toString(), // Override country.value specifically
+          },
+          gst: {
+            value: formData.taxTypeId.toString(), // Override country.value specifically
+          },
+          itemArray: formData.itemDetail?.map((items: any) => ({
+            ...items,
+            item: {
+              value: items.productId.toString(), // Override country.value specifically
+            },
+            unit: {
+              value: items.unitId.toString(), // Override country.value specifically
+            },
+            qty: items.quantity, // Correct reference
+          })),
+        });
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      // setIsLoading(false);
+    }
+  };
+
+  const GetVendorOptionList = async () => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        data: {
+          currentPage: 1,
+          searchText: "",
+          pageSize: 10,
+        },
+      };
+      const response = await post(GetCompanyList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        // onShowToast({
+        //   type: ToastType.success,
+        //   title: <FaCheck />,
+        //   position: ToastOpen.leftBottom,
+        //   content: description,
+        // });
+        const Data = await response.data;
+
+        const customerOptions = Data.filter((item: any) => item.groupId === 2) // Filter items with groupId = 1
+          .map((item: any) => ({
+            label: item.companyName,
+            value: item.id.toString(), // Convert id to string
+            state: item.stateId.toString(),
+            address: item.address,
+            pincode: item.pincode,
+            gstnNo: item.gstinNo,
+            // mobile:item.,
+          }));
+
+        setOptions((precData: any) => ({
+          ...precData,
+          customerOptions: customerOptions,
+        }));
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const GetBankOptions = async () => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        data: {
+          currentPage: 1,
+          searchText: "",
+          pageSize: 10,
+        },
+      };
+      const response = await post(GetUserBankList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        // onShowToast({
+        //   type: ToastType.success,
+        //   title: <FaCheck />,
+        //   position: ToastOpen.leftBottom,
+        //   content: description,
+        // });
+        const Data = await response.data;
+
+        const bankOption = Data // Filter items with groupId = 1
+          .map((item: any) => ({
+            label: item.bankName,
+            value: item.id.toString(), // Convert id to string            // mobile:item.,
+          }));
+
+        setOptions((precData: any) => ({
+          ...precData,
+          bankOptions: bankOption,
+        }));
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const GetGetItemOptionList = async () => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        data: {
+          currentPage: 1,
+          searchText: "",
+          pageSize: 10,
+        },
+      };
+      const response = await post(GetItemsList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // onShowToast({
+        //   type: ToastType.success,
+        //   title: <FaCheck />,
+        //   position: ToastOpen.leftBottom,
+        //   content: description,
+        // });
+        const Data = await response.data;
+
+        const itemOptions = Data.map((item: any) => ({
+          label: item.productName,
+          value: item.id.toString(), // Convert id to string
+        }));
+
+        setOptions((precData: any) => ({
+          ...precData,
+          itemOptions: itemOptions,
+        }));
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const GetUnitOptionList = async () => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        data: {
+          currentPage: 1,
+          searchText: "",
+          pageSize: 10,
+        },
+      };
+      const response = await post(GetUnitsList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        // onShowToast({
+        //   type: ToastType.success,
+        //   title: <FaCheck />,
+        //   position: ToastOpen.leftBottom,
+        //   content: description,
+        // });
+        const Data = await response.data;
+
+        const unitOptions = Data.map((item: any) => ({
+          label: item.unitName,
+          value: item.id.toString(), // Convert id to string
+        }));
+
+        setOptions((precData: any) => ({
+          ...precData,
+          unitOptions: unitOptions,
+        }));
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const GetGstOptionList = async () => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        data: {
+          currentPage: 1,
+          searchText: "",
+          pageSize: 10,
+        },
+      };
+      const response = await post(GetGstList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        // onShowToast({
+        //   type: ToastType.success,
+        //   title: <FaCheck />,
+        //   position: ToastOpen.leftBottom,
+        //   content: description,
+        // });
+        const Data = await response.data;
+
+        const gstOptions = Data.map((item: any) => ({
+          label: item.gstName,
+          value: item.id.toString(), // Convert id to string
+          percentage: item.percentage.toString(), // Convert id to string
+        }));
+
+        setOptions((precData: any) => ({
+          ...precData,
+          gstOptions: gstOptions,
+        }));
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const validationSchema = yup.object({
-    invoiceNumber: yup.string().required("Invoice number is required"),
-    invoiceDate: yup.string().required("Invoice date is required"),
+    invoiceNumber: yup.string().required("Bill number is required"),
+    date: yup.string().required("Bill date is required"),
     shipTo: yup.object().shape({
       label: yup.string().required("Ship to is required"),
       value: yup.string().required("Ship to is required"),
     }),
-    // shippingAddress: yup.string().required("Shipping address is required"),
     billTo: yup.object().shape({
       label: yup.string().required("Bill to is required"),
       value: yup.string().required("Bill to is required"),
     }),
-    // billingAddress: yup.string().required("Billing address is required"),
     itemArray: yup.array().of(
       yup.object().shape({
         item: yup.object().shape({
@@ -85,22 +452,33 @@ const InvoiceForm = () => {
           label: yup.string().required("Unit is required"),
           value: yup.string().required("Unit is required"),
         }),
-        qty: yup.number().required("Quantity is required"),
-        unitPrice: yup.number().required("Unit Price is required"),
-        discount: yup.number().nullable(), // Optional field, set to nullable
-        gst: yup
-          .object()
-          .shape({
-            label: yup.string().required("GST is required"),
-            value: yup.string().required("GST is required"),
-          })
-          .nullable(), // Optional field, set to nullable
-        total: yup.number().required("Total is required"),
+        qty: yup
+          .number()
+          // .transform((value, originalValue) =>
+          //   originalValue === "" ? null : value
+          // )
+          .required("Quantity is required"),
+        // .nullable(),
+        unitPrice: yup
+          .number()
+          .transform((value, originalValue) =>
+            originalValue === "" ? null : value
+          )
+          .required("Unit Price is required"),
+        total: yup
+          .number()
+          .transform((value, originalValue) =>
+            originalValue === "" ? null : value
+          )
+          .required("Total is required"),
       })
     ),
-    laborCharges: yup.number().nullable(), // Optional field
-    freightCharges: yup.number().nullable(), // Optional field
-    total: yup.number().required("Total is required"),
+    gst: yup.object().shape({
+      label: yup.string().required("GST is required"),
+      value: yup.string().required("GST is required"),
+      percentage: yup.string().required("GST is required"),
+    }), // Optional field, set to nullable
+    total: yup.number().required("Total is required").nullable(),
   });
 
   const {
@@ -113,7 +491,7 @@ const InvoiceForm = () => {
     formState: { errors, isSubmitting },
   } = useForm<SaleFormModel>({
     mode: "all",
-    // defaultValues,
+    defaultValues,
     // resolver: yupResolver(validationSchema),
   });
   const { fields, append, remove } = useFieldArray({
@@ -125,10 +503,56 @@ const InvoiceForm = () => {
   const calculateTotal = () => {
     // Add logic to calculate total from items, labor, and freight charges
   };
+  console.log("Item", formValues);
+  console.log("objectForm---->",formValues)
+  console.log("objectOptions",options)
   const onSubmit: SubmitHandler<SaleFormModel> = async (
     values: SaleFormModel
   ) => {
-    console.log("value", values);
+    try {
+      const payload = {
+        data: {
+          ...values,
+          itemDetail: values.itemArray?.map((item) => ({
+            ...item,
+            productId: parseInt(item.item.value),
+            unitId: parseInt(item.unit.value),
+            quantity: item.qty,
+          })),
+          date: new Date(values.date),
+          billToId: parseInt(values.billTo.value),
+          shipToId: parseInt(values.shipTo.value),
+          taxTypeId: parseInt(values.gst.value),
+          type: "BILL",
+        },
+      };
+      const response = await post(AddEditInvoice, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        onShowToast({
+          type: ToastType.success,
+          title: <FaCheck />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+        router.push("/dashboard/purchase/bill");
+        // setIsAccountCreated(true);
+        reset();
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      // setIsLoading(false);
+    }
   };
   const appendData = () => {
     console.log("Reach");
@@ -141,18 +565,21 @@ const InvoiceForm = () => {
         value: "",
         label: "",
       },
+      hsnCode: "",
       qty: 0,
       unitPrice: 0,
       discount: 0,
       total: 0,
     });
   };
-  return (
+  return isLoading ? (
+    <Loader size={"35"} className="text-indigo-600" />
+  ) : (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="w-full mx-auto p-6 bg-white shadow-md rounded-lg"
     >
-      <h2 className="text-2xl font-bold mb-6 text-center">Purchse Bill</h2>
+      <h2 className="text-2xl font-bold mb-6 text-center">Bill Form</h2>
       <hr className="mb-5"></hr>
       <div className="grid grid-cols-2 gap-6 justify-end">
         <div>
@@ -163,7 +590,7 @@ const InvoiceForm = () => {
             isRequired={true}
             name="invoiceNumber"
             register={register}
-            placeholder={"Enter Invoice"}
+            placeholder={"Enter Bill"}
             onKeyPress={(e) => e.key === "Enter" && e.currentTarget.blur()}
           ></FormInput>
         </div>
@@ -173,8 +600,8 @@ const InvoiceForm = () => {
             placeholderText={"SelectToDate"}
             maxDate={new Date()}
             name="invoiceDate"
-            // isRequired={true}
-            label={"Invoice Date"}
+            error={errors.date?.message}
+            label={"Bill Date"}
             selected={formValues.date}
             onChange={(selected: any) => {
               setValue(`date`, selected, {
@@ -186,78 +613,51 @@ const InvoiceForm = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-6 mt-6">
-        <div>
+        <div className="grid grid-cols-1">
           <FormDropdown
+            className="pb-2"
             isRequired={true}
-            label={"Vendor"}
+            label={"Bill from"}
             name="billTo"
             error={errors.billTo?.value?.message}
             placeholder="Type Here To Search"
-            options={customerOptions}
-            value={formValues.shipTo.label}
+            options={options?.customerOptions}
+            value={formValues.billTo?.value}
             onChange={(selected: any) => {
-              setValue(`billTo.value`, selected.value, {
-                shouldValidate: true,
-              });
-              setValue(`billTo.label`, selected.label, {
-                shouldValidate: true,
-              });
+              setValue("billTo", selected, { shouldValidate: true });
             }}
-            className="large"
+
+            // className="large"
           ></FormDropdown>
+          <p>State - {formValues.billTo?.state ?? ""}</p>
+          <p>Address - {formValues.billTo?.address ?? ""}</p>
+          <p>GSTN No. - {formValues.billTo?.gstnNo ?? ""}</p>
+          <p>Pincode - {formValues.billTo?.pincode ?? ""}</p>
+          <p>Mobile - {formValues.billTo?.mobile ?? ""}</p>
         </div>
-        <div>
-          {/* <FormDropdown
+        <div className="grid grid-cols-1">
+          <FormDropdown
             isRequired={true}
-            label={"Ship To"}
+            className="pb-2"
+            label={"Ship from"}
             name="shipTo"
             placeholder="Type Here To Search"
-            options={customerOptions}
+            options={options?.customerOptions}
             error={errors.shipTo?.value?.message}
-            value={formValues.shipTo.label}
+            value={formValues.shipTo?.value}
             onChange={(selected: any) => {
-              setValue(`shipTo.value`, selected.value, {
-                shouldValidate: true,
-              });
-              setValue(`shipTo.label`, selected.label, {
+              setValue(`shipTo`, selected, {
                 shouldValidate: true,
               });
             }}
-          ></FormDropdown> */}
+          ></FormDropdown>
+          <p>State - {formValues.shipTo.state ?? ""}</p>
+          <p>Address - {formValues.shipTo.address ?? ""}</p>
+          <p>GSTN No. - {formValues.shipTo.gstnNo ?? ""}</p>
+          <p>Pincode - {formValues.shipTo.pincode ?? ""}</p>
+          <p>Mobile - {formValues.shipTo.mobile ?? ""}</p>
         </div>
       </div>
-
-      {/* <div className="grid grid-cols-2 gap-6 mt-6">
-        <div>
-          <FormInput
-            type="text"
-            label={"Billing Address"}
-            error={errors.billingAddress?.message}
-            isRequired={true}
-            name="billingAddress"
-            length={"full"}
-            register={register}
-            placeholder={"Enter address"}
-            onKeyPress={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          ></FormInput>
-        </div>
-        <div>
-          <div>
-            <FormInput
-              type="text"
-              label={"Shipping Address"}
-              error={errors.shippingAddress?.message}
-              isRequired={true}
-              name="shippingAddress"
-              length={"full"}
-              register={register}
-              placeholder={"Enter address"}
-              onKeyPress={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            ></FormInput>
-          </div>
-        </div>
-      </div> */}
-
       <div className="mt-6">
         <table className="min-w-full border-collapse border border-gray-300 rounded-lg shadow-lg overflow-hidden">
           <thead className="bg-gray-100">
@@ -267,6 +667,9 @@ const InvoiceForm = () => {
               </th>
               <th className="w-[20%] border border-gray-300 p-3 text-left font-medium text-gray-700">
                 Item
+              </th>
+              <th className="w-[10%] border border-gray-300 p-3 text-left font-medium text-gray-700">
+                HSN Code
               </th>
               <th className="w-[12%] border border-gray-300 p-3 text-left font-medium text-gray-700">
                 Unit
@@ -279,9 +682,6 @@ const InvoiceForm = () => {
               </th>
               <th className="w-[10%] border border-gray-300 p-3 text-left font-medium text-gray-700">
                 Discount
-              </th>
-              <th className="w-[12%] border border-gray-300 p-3 text-left font-medium text-gray-700">
-                GST
               </th>
               <th className="border border-gray-300 p-3 text-left font-medium text-gray-700">
                 Total
@@ -304,9 +704,9 @@ const InvoiceForm = () => {
                     className="border-none shadow-none z-50"
                     name={`itemArray[${index}].item`}
                     placeholder="product"
-                    options={customerOptions}
+                    options={options?.itemOptions}
                     error={errors.itemArray?.[index]?.item?.value?.message} // Improved error handling for each index
-                    value={formValues.itemArray?.[index]?.item?.label}
+                    value={formValues.itemArray?.[index]?.item?.value}
                     onChange={(selected: any) => {
                       setValue(
                         `itemArray.${index}.item.value`,
@@ -324,6 +724,22 @@ const InvoiceForm = () => {
                       );
                     }}
                   ></FormDropdown>
+                  {/* <FaPlus onClick={() => addProduct()} /> */}
+                </td>
+                <td className="border border-gray-300 p-3 text-gray-600">
+                  <FormInput
+                    type="number"
+                    inputClassName="border-none shadow-none"
+                    isRequired={true}
+                    name={`itemArray[${index}].hsnCode`}
+                    error={errors.itemArray?.[index]?.hsnCode?.message}
+                    length={"full"}
+                    register={register}
+                    placeholder={"Enter HSN code"}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && e.currentTarget.blur()
+                    }
+                  />
                 </td>
                 <td className="border border-gray-300 p-3 text-gray-600">
                   <FormDropdown
@@ -332,9 +748,9 @@ const InvoiceForm = () => {
                     className="border-none shadow-none z-50"
                     name={`itemArray[${index}].unit`}
                     placeholder="unit"
-                    options={customerOptions}
+                    options={options?.unitOptions}
                     error={errors.itemArray?.[index]?.unit?.value?.message} // Improved error handling for each index
-                    value={formValues.itemArray?.[index]?.unit?.label}
+                    value={formValues.itemArray?.[index]?.unit?.value}
                     onChange={(selected: any) => {
                       setValue(
                         `itemArray.${index}.unit.value`,
@@ -361,7 +777,73 @@ const InvoiceForm = () => {
                     name={`itemArray[${index}].qty`}
                     error={errors.itemArray?.[index]?.qty?.message}
                     length={"full"}
-                    register={register}
+                    value={formValues.itemArray?.[index]?.qty}
+                    // register={register}
+                    onChange={(e: any) => {
+                      setValue(`itemArray.${index}.qty`, e.target.value, {
+                        shouldValidate: true,
+                      });
+                      setValue(
+                        `itemArray.${index}.total`,
+                        (formValues.itemArray?.[index]?.qty ?? 0) *
+                          (formValues.itemArray?.[index]?.unitPrice ?? 0) -
+                          (formValues.itemArray?.[index]?.qty ?? 0) *
+                            (formValues.itemArray?.[index]?.unitPrice ?? 0) *
+                            ((formValues.itemArray?.[index]?.discount ?? 0) /
+                              100)
+                      );
+                      setValue(
+                        "subTotal",
+                        formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        )
+                      );
+                      setValue(
+                        "total",
+                        (formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)
+                      );
+                      setValue(
+                        "taxAmount",
+                        ((formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)) *
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0)
+                      );
+                      setValue(
+                        "totalAmount",
+                        ((formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)) *
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0) +
+                          (formValues.itemArray?.reduce(
+                            (sum: number, item: any) =>
+                              parseFloat(sum + (item.total || 0)),
+                            0
+                          ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)
+                      );
+                    }}
                     placeholder={"Enter Quantity"}
                     onKeyPress={(e) =>
                       e.key === "Enter" && e.currentTarget.blur()
@@ -376,7 +858,73 @@ const InvoiceForm = () => {
                     name={`itemArray[${index}].unitPrice`}
                     error={errors.itemArray?.[index]?.unitPrice?.message}
                     length={"full"}
-                    register={register}
+                    // register={register}
+                    value={formValues.itemArray?.[index]?.unitPrice}
+                    onChange={(e: any) => {
+                      setValue(`itemArray.${index}.unitPrice`, e.target.value, {
+                        shouldValidate: true,
+                      });
+                      setValue(
+                        `itemArray.${index}.total`,
+                        (formValues.itemArray?.[index]?.qty ?? 0) *
+                          (formValues.itemArray?.[index]?.unitPrice ?? 0) -
+                          (formValues.itemArray?.[index]?.qty ?? 0) *
+                            (formValues.itemArray?.[index]?.unitPrice ?? 0) *
+                            ((formValues.itemArray?.[index]?.discount ?? 0) /
+                              100)
+                      );
+                      setValue(
+                        "subTotal",
+                        formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        )
+                      );
+                      setValue(
+                        "total",
+                        (formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)
+                      );
+                      setValue(
+                        "taxAmount",
+                        ((formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)) *
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0)
+                      );
+                      setValue(
+                        "totalAmount",
+                        ((formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)) *
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0) +
+                          (formValues.itemArray?.reduce(
+                            (sum: number, item: any) =>
+                              parseFloat(sum + (item.total || 0)),
+                            0
+                          ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)
+                      );
+                    }}
                     placeholder={"Enter Unit Price"}
                     onKeyPress={(e) =>
                       e.key === "Enter" && e.currentTarget.blur()
@@ -389,7 +937,73 @@ const InvoiceForm = () => {
                     inputClassName="border-none shadow-none"
                     name={`itemArray[${index}].discount`}
                     length={"full"}
-                    register={register}
+                    // register={register}
+                    value={formValues.itemArray?.[index]?.discount}
+                    onChange={(e: any) => {
+                      setValue(`itemArray.${index}.discount`, e.target.value, {
+                        shouldValidate: true,
+                      });
+                      setValue(
+                        `itemArray.${index}.total`,
+                        (formValues.itemArray?.[index]?.qty ?? 0) *
+                          (formValues.itemArray?.[index]?.unitPrice ?? 0) -
+                          (formValues.itemArray?.[index]?.qty ?? 0) *
+                            (formValues.itemArray?.[index]?.unitPrice ?? 0) *
+                            ((formValues.itemArray?.[index]?.discount ?? 0) /
+                              100)
+                      );
+                      setValue(
+                        "subTotal",
+                        formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        )
+                      );
+                      setValue(
+                        "total",
+                        (formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)
+                      );
+                      setValue(
+                        "taxAmount",
+                        ((formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)) *
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0)
+                      );
+                      setValue(
+                        "totalAmount",
+                        ((formValues.itemArray?.reduce(
+                          (sum: number, item: any) =>
+                            parseFloat(sum + (item.total || 0)),
+                          0
+                        ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)) *
+                          (formValues.gst.percentage
+                            ? parseFloat(formValues.gst.percentage) / 100
+                            : 0) +
+                          (formValues.itemArray?.reduce(
+                            (sum: number, item: any) =>
+                              parseFloat(sum + (item.total || 0)),
+                            0
+                          ) ?? 0) +
+                          (formValues.labourCharges ?? 0) +
+                          (formValues.freightCharges ?? 0)
+                      );
+                    }}
                     placeholder={"Enter discount"}
                     onKeyPress={(e) =>
                       e.key === "Enter" && e.currentTarget.blur()
@@ -397,33 +1011,17 @@ const InvoiceForm = () => {
                   />
                 </td>
                 <td className="border border-gray-300 p-3 text-gray-600">
-                  {/* <FormDropdown
-                    isRequired={true}
-                    // label={"Ship To"}
-                    className="border-none shadow-none z-50"
-                    name={`itemArray[${index}].gst`}
-                    placeholder="gst"
-                    options={customerOptions}
-                    error={errors.itemArray?.[index]?.gst?.value?.message} // Improved error handling for each index
-                    value={formValues.itemArray?.[index]?.gst?.label}
-                    onChange={(selected: any) => {
-                      setValue(`itemArray.${index}.gst.value`, selected.value, {
-                        shouldValidate: true,
-                      });
-                      setValue(`itemArray.${index}.gst.label`, selected.label, {
-                        shouldValidate: true,
-                      });
-                    }}
-                  ></FormDropdown> */}
-                </td>
-                <td className="border border-gray-300 p-3 text-gray-600">
                   <FormInput
                     type="number"
+                    disabled
                     isRequired={true}
+                    value={formValues.itemArray?.[index]?.total}
+                    error={errors.itemArray?.[index]?.total?.message}
                     inputClassName="border-none shadow-none"
+                    // value={formValues.itemArray?.[index]?.total}
                     name={`itemArray[${index}].total`}
                     length={"full"}
-                    register={register}
+                    // register={register}
                     placeholder={"Enter total"}
                     onKeyPress={(e) =>
                       e.key === "Enter" && e.currentTarget.blur()
@@ -445,13 +1043,61 @@ const InvoiceForm = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-6 mt-6">
+        <div></div>
+        <div>
+          <FormInput
+            type="number"
+            label={"Sub Total"}
+            name="subTotal"
+            disabled
+            length={"full"}
+            register={register}
+            placeholder={"Enter Freight"}
+            onKeyPress={(e) => e.key === "Enter" && e.currentTarget.blur()}
+          ></FormInput>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-6 mt-6">
         <div>
           <FormInput
             type="number"
             label={"Labor Charges"}
-            name="laborCharges"
+            name="labourCharges"
             length={"full"}
-            register={register}
+            value={formValues.labourCharges ?? 0}
+            //register={register}
+            onChange={(e: any) => {
+              setValue("labourCharges", parseFloat(e.target.value), {
+                shouldValidate: true,
+              });
+              setValue(
+                "total",
+                (formValues.freightCharges ?? 0) +
+                  (parseFloat(e.target.value) || 0) +
+                  (formValues.subTotal ?? 0)
+              );
+              setValue(
+                "taxAmount",
+                ((formValues.subTotal ?? 0) +
+                  (parseFloat(e.target.value) || 0) +
+                  (formValues.freightCharges ?? 0)) *
+                  (formValues.gst.percentage
+                    ? parseFloat(formValues.gst.percentage) / 100
+                    : 0)
+              );
+              setValue(
+                "totalAmount",
+                (formValues.subTotal ?? 0) +
+                  (parseFloat(e.target.value) || 0) +
+                  (formValues.freightCharges ?? 0) +
+                  ((formValues.subTotal ?? 0) +
+                    (parseFloat(e.target.value) || 0) +
+                    (formValues.freightCharges ?? 0)) *
+                    (formValues.gst.percentage
+                      ? parseFloat(formValues.gst.percentage) / 100
+                      : 0)
+              );
+            }}
             placeholder={"Enter Labor"}
             onKeyPress={(e) => e.key === "Enter" && e.currentTarget.blur()}
           ></FormInput>
@@ -461,23 +1107,154 @@ const InvoiceForm = () => {
             type="number"
             label={"Freight Charges"}
             name="freightCharges"
+            value={formValues.freightCharges ?? 0}
+            onChange={(e: any) => {
+              setValue("freightCharges", parseFloat(e.target.value), {
+                shouldValidate: true,
+              });
+              setValue(
+                "total",
+                (formValues.labourCharges ?? 0) +
+                  (parseFloat(e.target.value) || 0) +
+                  (formValues.subTotal ?? 0)
+              );
+              setValue(
+                "taxAmount",
+                ((formValues.subTotal ?? 0) +
+                  (parseFloat(e.target.value) || 0) +
+                  (formValues.labourCharges ?? 0)) *
+                  (formValues.gst.percentage
+                    ? parseFloat(formValues.gst.percentage) / 100
+                    : 0)
+              );
+              setValue(
+                "totalAmount",
+                (formValues.subTotal ?? 0) +
+                  (parseFloat(e.target.value) || 0) +
+                  (formValues.labourCharges ?? 0) +
+                  ((formValues.subTotal ?? 0) +
+                    (parseFloat(e.target.value) || 0) +
+                    (formValues.labourCharges ?? 0)) *
+                    (formValues.gst.percentage
+                      ? parseFloat(formValues.gst.percentage) / 100
+                      : 0)
+              );
+            }}
             length={"full"}
-            register={register}
+            //register={register}
             placeholder={"Enter Freight"}
             onKeyPress={(e) => e.key === "Enter" && e.currentTarget.blur()}
           ></FormInput>
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="grid grid-cols-2 gap-6 mt-6">
+        <FormDropdown
+          isRequired={true}
+          label={"GST"}
+          className="border-none shadow-none z-50"
+          name={`gst`}
+          placeholder="Gst"
+          options={options?.gstOptions}
+          error={errors.gst?.value?.message} // Improved error handling for each index
+          value={formValues.gst?.value}
+          onChange={(selected: any) => {
+            setValue(`gst.value`, selected.value, {
+              shouldValidate: true,
+            });
+            setValue(`gst.label`, selected.label, {
+              shouldValidate: true,
+            });
+            setValue(`gst.percentage`, selected.percentage, {
+              shouldValidate: true,
+            });
+            setValue(
+              "taxAmount",
+              (formValues.total ?? 0) * (parseFloat(selected.percentage) / 100)
+            );
+            setValue(
+              "totalAmount",
+              (formValues.total ?? 0) *
+                (parseFloat(selected.percentage) / 100) +
+                (formValues.total ?? 0)
+            );
+          }}
+        ></FormDropdown>
         <FormInput
           disabled
           type="text"
-          label={"Total"}
-          name="total"
+          label={"GST Amount"}
+          name="taxAmount"
           length={"full"}
           register={register}
         ></FormInput>
+      </div>
+      <div className="grid grid-cols-2 gap-6 mt-6">
+        <div></div>
+        <div>
+          <FormInput
+            disabled
+            type="text"
+            label={"Total"}
+            name="totalAmount"
+            length={"full"}
+            register={register}
+          ></FormInput>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-6">
+        <FormDropdown
+          // isRequired={true}
+          label="Bank"
+          className="border-none shadow-none z-50"
+          name={`bankName`}
+          placeholder="bank"
+          options={options?.bankOptions}
+          // error={errors.itemArray?.[index]?.unit?.value?.message} // Improved error handling for each index
+          value={formValues.bank?.value}
+          onChange={(selected: any) => {
+            setValue(
+              `bank.value`,
+              selected.value,
+              {
+                shouldValidate: true,
+              }
+            );
+            setValue(
+              `bank.label`,
+              selected.label,
+              {
+                shouldValidate: true,
+              }
+            );
+          }}
+        ></FormDropdown>
+        <FormDropdown
+          // isRequired={true}
+          label="Term & Condition"
+          className="border-none shadow-none z-50"
+          name={`bankName`}
+          placeholder="term & condition"
+          options={options?.termOptions}
+          // error={errors.itemArray?.[index]?.unit?.value?.message} // Improved error handling for each index
+          value={formValues.terms?.value}
+          onChange={(selected: any) => {
+            setValue(
+              `terms.value`,
+              selected.value,
+              {
+                shouldValidate: true,
+              }
+            );
+            setValue(
+              `terms.label`,
+              selected.label,
+              {
+                shouldValidate: true,
+              }
+            );
+          }}
+        ></FormDropdown>
       </div>
 
       <div className="mt-6 flex space-x-4">
@@ -491,6 +1268,7 @@ const InvoiceForm = () => {
         <Button
           variant="grey"
           // className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          onClick={() => router.push("/dashboard/purchase/bill")}
         >
           Cancel
         </Button>
@@ -500,9 +1278,10 @@ const InvoiceForm = () => {
         >
           View Report
         </Button>
+        {/* <InvoicePage /> */}
       </div>
     </form>
   );
 };
 
-export default InvoiceForm;
+export default BillForm;

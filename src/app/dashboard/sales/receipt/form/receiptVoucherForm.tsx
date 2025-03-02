@@ -98,7 +98,7 @@ const ReceiptVoucherForm = (
   const formValues = getValues();
   useEffect(() => {
     const fetchData = async () => {
-      await getInvoiceList(1, "", 10);
+      await getInvoiceList(1, "", 10,"BILL");
       await getBankList(1, "", 10);
       if(props.id){
         await getSpecificData(props.id)
@@ -111,7 +111,8 @@ const ReceiptVoucherForm = (
   const getInvoiceList = async (
     currentPage: number,
     searchText: string,
-    pageSize: number
+    pageSize: number,
+    type: string
   ) => {
     // setIsLoading(true);
     try {
@@ -120,6 +121,7 @@ const ReceiptVoucherForm = (
           currentPage: currentPage,
           searchText: searchText,
           pageSize: pageSize,
+          type: type,
         },
       };
       const response = await post(GetInvoiceList, payload);
@@ -275,7 +277,7 @@ const ReceiptVoucherForm = (
               billId:values.billDetail.value,
               paymentModeId: values.paymentMode.value,
               bankId: values.bankDetail.value,
-
+              type: "RECEIPT"
             },
           };
           const response = await post(AddEditReceipt, payload);
@@ -345,11 +347,11 @@ const ReceiptVoucherForm = (
             /> */}
             <PickDate
               dateFormat="dd-MMM-yyyy"
-              placeholderText={"SelectToDate"}
+              placeholderText={"Select Date"}
               maxDate={new Date()}
-              name="invoiceDate"
+              name="date"
               error={errors.date?.message}
-              label={"Invoice Date"}
+              label={"Date"}
               selected={formValues.date}
               onChange={(selected: any) => {
                 setValue(`date`, selected, {
@@ -364,7 +366,7 @@ const ReceiptVoucherForm = (
           <div>
             <FormDropdown
               isRequired={true}
-              label={"Bill Ref."}
+              label={"Invoice Ref."}
               name="billId"
               error={errors.billDetail?.value?.message}
               placeholder="Type Here To Search"

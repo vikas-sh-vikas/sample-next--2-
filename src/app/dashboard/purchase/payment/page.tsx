@@ -16,134 +16,127 @@ import {
 import useDrawer from "@/hooks/useDrawer";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
-import { FaEdit, FaPlus, FaRegFileAlt } from "react-icons/fa";
-import ProductForm from "./form/paymentVoucherForm";
+import { FaCheck, FaEdit, FaPlus, FaRegFileAlt, FaTimes } from "react-icons/fa";
 import { DrawerOpen } from "@/state/drawer/slice";
-import VoucherForm from "./form/paymentVoucherForm";
 import PaymentVoucherForm from "./form/paymentVoucherForm";
+import { GetReceiptList } from "@/utils/api.constant";
+import { eResultCode } from "@/utils/enum";
+import { ToastOpen, ToastType } from "@/state/toast/slice";
+import useToast from "@/hooks/useToast";
+import useFetch from "@/hooks/useFetch";
 
-type TSaleModel = {
+type TReceiptModal = {
   id: number;
-  customerName: string;
-  gstNo: string;
-  address: string;
-  contactPerson: string;
-  contactDetail: string;
+  voucherNo: string;
+  date: string;
+  description: string;
 };
 
 function Page() {
+  const {onShowToast}=useToast()
   const router = useRouter();
+  const {post} = useFetch()
   const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(false);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterRowsCount, setFilterRowsCount] = useState(0);
   const [searchText, setSearchText] = useState("");
-  const [data, setData] = useState<TSaleModel[]>([]); // State to store the data
+  const [type, setType] = useState("PAYMENT");
+  const [data, setData] = useState<TReceiptModal[]>([]); // State to store the data
   const { onShowDrawer } = useDrawer();
   const fetchData = async (
     currentPage: number,
     searchText: string,
-    pageSize: number
+    pageSize: number,
+    type: string
   ) => {
     setIsLoading(true);
-
-    // Simulated API data
-    const fetchedData: TSaleModel[] = [
-      {
-        id: 1,
-        customerName: "John Doe",
-        gstNo: "27AAAPL1234C1ZV",
-        address: "123 Main Street, New York, NY 10001",
-        contactPerson: "Jane Doe",
-        contactDetail: "+1-234-567-8901",
-      },
-      {
-        id: 2,
-        customerName: "Alice Smith",
-        gstNo: "29BBAPL5678D1ZV",
-        address: "456 Elm Street, Los Angeles, CA 90001",
-        contactPerson: "Bob Smith",
-        contactDetail: "+1-345-678-9012",
-      },
-      {
-        id: 3,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 4,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 5,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 6,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 7,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 8,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 9,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-      {
-        id: 10,
-        customerName: "Michael Brown",
-        gstNo: "19CCAPL9101E1ZV",
-        address: "789 Oak Street, Chicago, IL 60601",
-        contactPerson: "Emily Brown",
-        contactDetail: "+1-456-789-0123",
-      },
-    ];
-
-    // Set the fetched data to state
-    setData(fetchedData);
-    setFilterRowsCount(fetchedData.length); // Assuming the length is the total rows count
-
-    setIsLoading(false);
+    try {
+      const payload = {
+        data: {
+          currentPage: currentPage,
+          searchText: searchText,
+          pageSize: pageSize,
+          type: type,
+        },
+      };
+      const response = await post(GetReceiptList, payload);
+      const { dataResponse } = response;
+      const { returnCode, description } = dataResponse;
+      if (returnCode == eResultCode.SUCCESS) {
+        // setIsLoading(false);
+        const data = await response.data;
+        onShowToast({
+          type: ToastType.success,
+          title: <FaCheck />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+        // console.log("DtaResponce", response.data);
+        setData(data);
+        setFilterRowsCount(data.length); // Assuming the length is the total rows count
+      } else {
+        onShowToast({
+          type: ToastType.error,
+          title: <FaTimes />,
+          position: ToastOpen.leftBottom,
+          content: description,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchData(currentPage, searchText, pageSize);
+    fetchData(currentPage, searchText, pageSize,type);
   }, [currentPage, pageSize, searchText]); // Re-fetch data on page change, searchText, or pageSize change
   const handleEdit = (id: number) => {
-    router.push(pathname + `/form/${id}`);
+    // router.push(pathname + `/form/${id}`);
+    const drawerWidth = window.innerWidth <= 640 
+    ? "100%" 
+    : window.innerWidth <= 1024 
+      ? "60%" 
+      : "45%";    onShowDrawer({
+      dimmer: true,
+      width: drawerWidth,
+      name: "Show Drawer Form",
+      Component: () => (
+        <PaymentVoucherForm
+          id={id}
+          onRefreshList={() => {
+            onRefreshList();
+          }}
+        />
+      ),
+      position: DrawerOpen.right,
+    });
+  };
+  const onRefreshList = () => {
+    const urlparams = new URLSearchParams(location.search);
+    const page = urlparams.get("currentPage");
+    if (page) {
+      setCurrentPage(parseInt(page));
+    }
+    const psize = urlparams.get("pageSize");
+    if (psize) {
+      setPageSize(parseInt(psize));
+    }
+    const sText = urlparams.get("search");
+    if (sText) {
+      setSearchText(sText);
+    }
+    if (page || psize || sText)
+      fetchData(
+        parseInt(page ? page : "1"),
+        sText ? sText : "",
+        parseInt(psize ? psize : "10"),
+        type
+      );
+    else fetchData(currentPage, searchText, pageSize,type);
   };
   const handleSearch = (searchText: string) => {
     const newUrl = new URL(window.location.href);
@@ -171,7 +164,7 @@ function Page() {
         <PaymentVoucherForm
           id={id}
           onRefreshList={() => {
-            console.log("object");
+            onRefreshList()
           }}
         />
       ),
@@ -201,10 +194,10 @@ function Page() {
           <TableColumn classNames="indexColumn">
             {index + 1 + (currentPage - 1) * pageSize}
           </TableColumn>
-          <TableColumn variant="leftAlign">{item.customerName}</TableColumn>
-          <TableColumn variant="leftAlign">{item.gstNo}</TableColumn>
-          <TableColumn variant="leftAlign">{item.contactPerson}</TableColumn>
-          <TableColumn variant="leftAlign">{item.contactDetail}</TableColumn>
+          <TableColumn variant="leftAlign">{item.voucherNo}</TableColumn>
+          <TableColumn variant="leftAlign">{item.date}</TableColumn>
+          <TableColumn variant="leftAlign">{item.description}</TableColumn>
+          {/* <TableColumn variant="leftAlign">{item.contactDetail}</TableColumn> */}
           <TableColumn classNames="actionColumn">
             <FaEdit onClick={() => handleEdit(item.id)} />
           </TableColumn>
@@ -230,16 +223,13 @@ function Page() {
                 {"SerialNo"}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"Customer Name"}
+                {"Voucher No."}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"GST No"}
+                {"Date"}
               </TableHeadCell>
               <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"Contact Person"}
-              </TableHeadCell>
-              <TableHeadCell variant="leftAlign" classNames="Theader">
-                {"Contact Detail"}
+                {"Description"}
               </TableHeadCell>
               <TableHeadCell classNames="Theader">
                 <FaPlus onClick={() => handleAdd(0)} />
@@ -258,7 +248,7 @@ function Page() {
             onPageChange={setCurrentPage}
             fetchdata={(currentPage, pageSize) => {
               setPageSize(pageSize);
-              fetchData(currentPage, searchText, pageSize);
+              fetchData(currentPage, searchText, pageSize,type);
             }}
             searchText={searchText || ""}
             itemsPerPage={pageSize}
