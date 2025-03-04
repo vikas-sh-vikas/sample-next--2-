@@ -278,7 +278,6 @@ const PaymentVoucherForm = (
               paymentModeId: values.paymentMode.value,
               bankId: values.bankDetail.value,
               type: "PAYMENT",
-
             },
           };
           const response = await post(AddEditReceipt, payload);
@@ -294,6 +293,7 @@ const PaymentVoucherForm = (
             });
             // router.push("/dashboard/sales/invoice");
             // setIsAccountCreated(true);
+            props.onRefreshList();
             onCloseDrawer();
             reset();
           } else {

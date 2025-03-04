@@ -293,6 +293,7 @@ const ReceiptVoucherForm = (
             });
             // router.push("/dashboard/sales/invoice");
             // setIsAccountCreated(true);
+            props.onRefreshList();
             onCloseDrawer();
             reset();
           } else {

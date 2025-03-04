@@ -503,9 +503,9 @@ const InvoiceForm = ({ params }: any) => {
   const calculateTotal = () => {
     // Add logic to calculate total from items, labor, and freight charges
   };
-  console.log("Item", formValues);
-  console.log("objectForm---->",formValues)
-  console.log("objectOptions",options)
+  // console.log("Item", formValues);
+  // console.log("objectForm---->",formValues)
+  // console.log("objectOptions",options)
   const onSubmit: SubmitHandler<SaleFormModel> = async (
     values: SaleFormModel
   ) => {
